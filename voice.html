@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>వాయిస్ Vanaja AI 🎙️ — Voice Health Assistant</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+body{--telugu:'Noto Sans Telugu','Plus Jakarta Sans',sans-serif;}
+.voice-hero{text-align:center;padding:1.6rem 1rem 1rem;
+  background:linear-gradient(135deg,rgba(0,51,102,.08),rgba(107,27,71,.07));
+  border:1px solid var(--border);border-radius:var(--r-xl);}
+
+/* Mic orb */
+.mic-orb{width:min(170px,44vw);height:min(170px,44vw);margin:1.2rem auto;border-radius:50%;
+  display:grid;place-items:center;cursor:pointer;border:none;background:var(--grad-accent);
+  color:#fff;font-size:clamp(3rem,9vw,4rem);position:relative;box-shadow:var(--shadow-2);
+  transition:transform .2s;}
+.mic-orb:active{transform:scale(.96);}
+.mic-orb::before,.mic-orb::after{content:"";position:absolute;inset:0;border-radius:50%;
+  border:2px solid rgba(139,46,95,.5);opacity:0;pointer-events:none;}
+.mic-orb.listening::before{animation:ripple 1.6s ease-out infinite;}
+.mic-orb.listening::after{animation:ripple 1.6s .55s ease-out infinite;}
+@keyframes ripple{0%{opacity:.7;transform:scale(1);}100%{opacity:0;transform:scale(1.65);}}
+.mic-status{font-weight:800;color:var(--maroon-600);min-height:1.4em;}
+
+/* transcript */
+.bubble-tel{font-family:var(--telugu);}
+.transcript-card{background:var(--surface-2);border-radius:var(--r-md);padding:.8rem 1rem;
+  min-height:3.2em;font-size:.95rem;line-height:1.7;margin-top:.7rem;text-align:left;}
+.transcript-card .who{font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ink-faint);display:block;margin-bottom:.15rem;}
+
+/* elder mode */
+html[data-text="large"] .transcript-card{font-size:1.25rem;}
+.elder-note{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:.8rem;}
+
+/* chat log */
+.vlog{max-width:46rem;margin:1.2rem auto;display:flex;flex-direction:column;gap:.7rem;}
+.vmsg{padding:.85rem 1rem;border-radius:var(--r-lg);line-height:1.75;font-size:.94rem;}
+.vmsg.user{align-self:flex-end;background:var(--navy-50);border:1px solid var(--navy-200);max-width:85%;}
+[data-theme="dark"] .vmsg.user{background:rgba(21,92,153,.18);}
+.vmsg.ai{align-self:flex-start;background:var(--surface);border:1px solid var(--border);
+  box-shadow:var(--shadow-1);max-width:92%;}
+.vmsg.ai .disclaimer-mini{font-size:.72rem;color:var(--ink-faint);margin-top:.45rem;
+  padding-top:.4rem;border-top:1px dashed var(--border);}
+
+/* suggestion chips (Telugu first) */
+.tel-chips{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:.9rem;}
+.tel-chip{cursor:pointer;border:1.5px solid var(--maroon-200);color:var(--maroon-600);
+  background:var(--maroon-50);border-radius:var(--r-full);padding:.45rem .95rem;
+  font-family:var(--telugu);font-size:.88rem;font-weight:700;}
+[data-theme="dark"] .tel-chip{background:rgba(139,46,95,.16);}
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.4rem">
+  <div class="eyebrow">Vanaja AI · వాయిస్ సహాయకుడు</div>
+
+  <!-- ============ VOICE HERO ============ -->
+  <section class="voice-hero">
+    <h1 style="font-family:var(--telugu)">మాట్లాడండి — మేము వినిపిస్తాము 🎙️</h1>
+    <p style="font-family:var(--telugu);color:var(--ink-muted);font-size:1rem">
+      Speak in Telugu, English or Hindi. Vanaja AI listens and answers out loud.</p>
+
+    <button class="mic-orb" id="micBtn" onclick="toggleMic()" aria-label="Tap to speak">🎙️</button>
+    <div class="mic-status" id="micStatus" style="font-family:var(--telugu)">మాట్లాడటానికి నొక్కండి</div>
+
+    <div class="transcript-card" id="heardCard" style="display:none">
+      <span class="who">మీరు అన్నది / You said</span>
+      <span id="heardText" class="bubble-tel"></span>
+    </div>
+
+    <!-- simple-language + elder controls -->
+    <div class="elder-note">
+      <button class="btn btn-ghost btn-sm" id="simpleBtn" aria-pressed="false"
+        onclick="toggleSimple()">🧒 Simple language: OFF</button>
+      <button class="btn btn-ghost btn-sm" onclick="setLargeText()">🔍 Elder-friendly text</button>
+      <a class="btn btn-ghost btn-sm" href="ai-assistant.html">⌨️ Prefer typing?</a>
+    </div>
+
+    <!-- Telugu-first quick asks -->
+    <div class="tel-chips">
+      <button class="tel-chip" onclick="speakQuery('నా sugar report explain చేయండి')">“నా sugar report explain చేయండి”</button>
+      <button class="tel-chip" onclick="speakQuery('CBC అంటే ఏమిటి?')">“CBC అంటే ఏమిటి?”</button>
+      <button class="tel-chip" onclick="speakQuery('Lipid profile కోసం ఉపవాసం ఉండాలా?')">“ఉపవాసం ఉండాలా?”</button>
+      <button class="tel-chip" onclick="speakQuery('What does my report mean?')">English →</button>
+    </div>
+  </section>
+
+  <!-- ============ CONVERSATION LOG ============ -->
+  <div class="vlog" id="vlog" aria-live="polite"></div>
+
+  <!-- browser support note -->
+  <p class="disclaimer" style="margin-top:1rem;text-align:center" id="supportNote"></p>
+  <p class="disclaimer" style="text-align:center">AI-generated information is for educational and informational purposes
+  and does not replace advice, diagnosis, or treatment from a qualified healthcare professional.<br>
+  <span style="font-family:var(--telugu)">AI సమాచారం విద్యాపరమైనది మాత్రమే — ఇది వైద్య సలహాను భర్తీ చేయదు.</span></p>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('AI');
+
+let simple=false, listening=false, recog=null;
+
+/* ================= SIMPLE LANGUAGE MODE ================= */
+function toggleSimple(){
+  simple=!simple;
+  const b=document.getElementById('simpleBtn');
+  b.setAttribute('aria-pressed',String(simple));
+  b.textContent=`🧒 Simple language: ${simple?'ON':'OFF'}`;
+  toast(simple?'Simple language on — shorter, easier words':'Standard language');
+}
+
+function setLargeText(){
+  const on=document.documentElement.dataset.text!=='large';
+  localStorage.setItem('vd_largetext',on?'1':'0'); applyPrefs();
+}
+
+/* ================= KNOWLEDGE (Telugu-first, simple variants) ================= */
+const VOICE_KB=[
+ {k:/sugar|shugar|షుగర్|సుగర్|explain/i,
+  te:'మీ షుగర్ రిపోర్ట్‌లో HbA1c 5.8% ఉంది — ఇది గత 3 నెలల సగటు. ఇది జాగ్రత్తగా చూసుకోవాల్సిన పరిధిలో ఉంది, కానీ డయాబెటిస్ కాదు. ఆహారం గురించి మీ డాక్టర్‌తో మాట్లాడండి.',
+  teSimple:'మీ షుగర్ కొంచెం ఎక్కువగా ఉంది. భయపడాల్సిన అవసరం లేదు. కానీ మంచి ఆహారం తినండి. డాక్టర్‌ని కలవండి.',
+  en:'Your latest HbA1c is 5.8% — a 3-month average sitting just above the normal band. Not diabetes range, but worth a diet conversation with your doctor.'},
+ {k:/cbc|blood|రక్తం/i,
+  te:'CBC రక్తంలోని మూడు రకాల కణాలను పరిశీలిస్తుంది — ఆక్సిజన్ మోసే ఎర్ర కణాలు, రోగనిరోధకత కలిగిన తెల్ల కణాలు, గడ్డకట్టే ప్లేట్‌లెట్స్. మీ CBC ఎక్కువగా సాధారణంగా ఉంది.',
+  teSimple:'రక్తం మంచిగా ఉంది. శరీరంలోని రక్త కణాలన్నీ సరిగా పని చేస్తున్నాయి.',
+  en:'A CBC checks your red cells (oxygen), white cells (immunity) and platelets (clotting). Your panel looks mostly healthy.'},
+ {k:/fast|upavasam|ఉపవాసం|lipid/i,
+  te:'లిపిడ్ ప్రొఫైల్ కోసం 12 గంటలు తినకూడదు — నీళ్లు తాగవచ్చు. ఉదయం గంటలకు టెస్ట్ చేయించుకోవడం మంచిది.',
+  teSimple:'రాత్రి తర్వాత ఉదయం వరకు ఏమీ తినకూడదు. నీళ్లు మాత్రమే. అప్పుడు టెస్ట్ చేయించుకోండి.',
+  en:'Yes — fast for 12 hours before a Lipid Profile (water is fine). Morning slots are best.'},
+];
+const FALLBACK={
+ te:'నేను పరీక్షలు, సిద్ధత, రిపోర్ట్ వివరణ గురించి సహాయపడతాను. నిర్ధారణ కోసం డాక్టర్‌ని కలవండి.',
+ en:'I can help with tests, preparation and reports — but please see your doctor for diagnosis.'
+};
+const DISCLAIMER_TE='ఇది సమాచారం మాత్రమే — వైద్య సలహా కాదు.';
+const DISCLAIMER_EN='This is general information, not medical advice.';
+
+/* ================= SPEECH OUTPUT ================= */
+function speak(text,lang){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=lang==='en'?'en-IN':'te-IN';           // Indian voices incl. Telugu where available
+  u.rate=simple?.88:1;                           // slower for elders/simple mode
+  const v=speechSynthesis.getVoices().find(v=>v.lang.startsWith(lang==='en'?'en-IN':'te'));
+  if(v)u.voice=v;
+  speechSynthesis.speak(u);
+}
+
+/* ================= CONVERSATION ================= */
+function answer(q){
+  const hit=VOICE_KB.find(e=>e.k.test(q));
+  let body=hit?(simple&&hit.teSimple?hit.teSimple:(/telugu|తెలుగు|[అ-హ]/.test(q)?hit.te:hit.en)):FALLBACK.te;
+  if(simple&&!hit.teSimple) body=body.split('—')[0].split('.')[0]+'.';
+  const disc=/[అ-హ]/.test(body)?DISCLAIMER_TE:DISCLAIMER_EN;
+  return {body,disc,lang:/[అ-హ]/.test(body)?'te':'en'};
+}
+function pushMsg(cls,text,disc){
+  const el=document.createElement('div');
+  el.className='vmsg '+cls+(disc?' ai':'');
+  el.innerHTML=text.replace(/([అ-హ][^\n<]*)/g,'<span class="bubble-tel">$1</span>')
+    +(disc?`<div class="disclaimer-mini">${disc}</div>`:'');
+  document.getElementById('vlog').appendChild(el);
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function handleQuery(q){
+  pushMsg('user',q);
+  const a=answer(q);
+  setTimeout(()=>{ pushMsg('ai',a.body,a.disc); speak(a.body,a.lang); },450);
+}
+function speakQuery(q){ handleQuery(q); }
+
+/* ================= SPEECH INPUT (Web Speech API) ================= */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR){
+  recog=new SR(); recog.lang='te-IN'; recog.interimResults=true; recog.continuous=false;
+  recog.onstart=()=>{ listening=true;
+    document.getElementById('micBtn').classList.add('listening');
+    document.getElementById('micStatus').textContent='వింటున్నాను… మాట్లాడండి';
+  };
+  recog.onresult=e=>{
+    const t=[...e.results].map(r=>r[0].transcript).join('');
+    const hc=document.getElementById('heardCard'); hc.style.display='block';
+    document.getElementById('heardText').textContent=t;
+    if(e.results[e.results.length-1].isFinal){ stopMic(); handleQuery(t.trim()); }
+  };
+  recog.onerror=e=>{ stopMic();
+    document.getElementById('micStatus').textContent=
+      e.error==='not-allowed'?'🎤 మైక్ అనుమతి అవసరం':'క్షమించండి, మళ్లీ ప్రయత్నించండి';
+  };
+  recog.onend=()=>stopMic();
+}else{
+  document.getElementById('supportNote').textContent=
+    '🎙️ Live voice input needs Chrome or Edge on desktop/Android. Tap the sample questions above to hear the voice replies anywhere.';
+}
+function toggleMic(){ listening?stopMic(true):(recog?recog.start():toast('Voice input unsupported here — try the chips')); }
+function stopMic(skipCancel){
+  listening=false;
+  document.getElementById('micBtn').classList.remove('listening');
+  document.getElementById('micStatus').textContent='మాట్లాడటానికి నొక్కండి';
+  if(recog&&!skipCancel){ try{recog.stop();}catch(_){} }
+}
+/* warm up voice list */
+if('speechSynthesis' in window) speechSynthesis.getVoices();
+
+pushMsg('ai','నమస్తే! నేను Vanaja AI. మీ రిపోర్ట్ గురించి మాట్లాడాలంటే మైక్ నొక్కండి — ఉదాహరణ: “నా sugar report explain చేయండి.”',
+  DISCLAIMER_TE);
+</script>
+</body>
+</html>

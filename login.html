@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+.auth-wrap{max-width:420px;margin:2rem auto;}
+.auth-card{padding:1.8rem 1.5rem;}
+.auth-tabs{display:flex;gap:.4rem;margin-bottom:1.1rem;}
+.auth-tab{flex:1;padding:.55rem;border-radius:var(--r-full);border:1.5px solid var(--border);
+  background:transparent;color:var(--ink-muted);font-weight:800;font-size:.88rem;cursor:pointer;}
+.auth-tab.on{background:var(--maroon-600);color:#fff;border-color:transparent;}
+.otp-row{display:flex;gap:.5rem;justify-content:center;margin:.7rem 0;}
+.otp-row input{width:46px;height:52px;text-align:center;font-size:1.25rem;font-weight:800;
+  border:2px solid var(--border);border-radius:11px;background:var(--surface);color:var(--ink);}
+.otp-row input:focus{border-color:var(--maroon-500);outline:none;}
+.trust{display:flex;gap:.4rem;justify-content:center;margin-top:1rem;flex-wrap:wrap;font-size:.75rem;color:var(--ink-faint);}
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section auth-wrap" style="padding-top:1.4rem">
+  <div class="card auth-card">
+    <div style="text-align:center;margin-bottom:1rem">
+      <div class="eyebrow">Vanaja Health Account</div>
+      <h1 style="font-size:1.35rem;margin:.2em 0 .1em" id="authTitle">Welcome back</h1>
+      <p style="color:var(--ink-muted);font-size:.88rem;margin:0" id="authSub">
+        Sign in to your reports, bookings and family health.</p>
+    </div>
+
+    <div class="auth-tabs" role="tablist">
+      <button class="auth-tab on" id="tabSignin" role="tab" aria-selected="true" onclick="showTab('in')">Sign in</button>
+      <button class="auth-tab" id="tabSignup" role="tab" aria-selected="false" onclick="showTab('up')">Create account</button>
+    </div>
+
+    <!-- SIGN IN -->
+    <form id="formIn" onsubmit="return doSignIn(event)">
+      <label class="field"><span style="font-weight:700;font-size:.85rem">Phone number</span>
+        <input class="input" id="inPhone" type="tel" placeholder="+91 90000 11580" required></label>
+      <label class="field"><span style="font-weight:700;font-size:.85rem">Password</span>
+        <input class="input" id="inPass" type="password" placeholder="••••••••" minlength="6" required></label>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:.3rem 0 .9rem">
+        <label style="display:flex;gap:.45rem;align-items:center;font-size:.84rem">
+          <input type="checkbox" checked> Remember me</label>
+        <a href="#" onclick="toast('OTP reset link sent (demo)');return false"
+           style="font-size:.84rem;color:var(--maroon-600);font-weight:700">Forgot password?</a>
+      </div>
+      <button class="btn btn-primary btn-lg btn-glow" style="width:100%">Sign in →</button>
+      <p style="font-size:.78rem;color:var(--ink-faint);margin:.8rem 0 0;text-align:center">
+        Demo: any phone + password ≥ 6 chars works.</p>
+    </form>
+
+    <!-- SIGN UP -->
+    <form id="formUp" style="display:none" onsubmit="return doSignUp(event)">
+      <div class="grid grid-2">
+        <label class="field"><span style="font-weight:700;font-size:.85rem">Full name</span>
+          <input class="input" id="upName" placeholder="Your name" required></label>
+        <label class="field"><span style="font-weight:700;font-size:.85rem">Age</span>
+          <input class="input" id="upAge" type="number" min="1" max="120" placeholder="35" required></label>
+      </div>
+      <label class="field"><span style="font-weight:700;font-size:.85rem">Phone number</span>
+        <input class="input" id="upPhone" type="tel" placeholder="+91" required></label>
+      <label class="field"><span style="font-weight:700;font-size:.85rem">Create password</span>
+        <input class="input" id="upPass" type="password" minlength="6" placeholder="Min 6 characters" required></label>
+
+      <div id="otpBlock" style="display:none">
+        <p style="font-size:.88rem;text-align:center;margin:.9rem 0 .2rem">
+          We sent a 4-digit OTP to <b id="otpPhone"></b><br>
+          <small style="color:var(--ink-faint)">Demo code: <b>4821</b></small></p>
+        <div class="otp-row">
+          <input maxlength="1" inputmode="numeric" aria-label="OTP 1"><input maxlength="1" inputmode="numeric" aria-label="OTP 2">
+          <input maxlength="1" inputmode="numeric" aria-label="OTP 3"><input maxlength="1" inputmode="numeric" aria-label="OTP 4">
+        </div>
+      </div>
+
+      <label style="display:flex;gap:.5rem;align-items:flex-start;font-size:.82rem;margin:.8rem 0">
+        <input type="checkbox" id="upConsent" checked>
+        <span>I agree to the terms &amp; privacy policy and consent to digital report storage for my health records.</span>
+      </label>
+      <button class="btn btn-primary btn-lg btn-glow" style="width:100%" id="upBtn">Send OTP &amp; create account</button>
+    </form>
+
+    <div class="trust">
+      <span>🔐 Encrypted storage</span>·<span>Audit-logged access</span>·<span>Your data stays yours</span>
+    </div>
+  </div>
+</main>
+
+<div id="chrome-fab"></div><div id="chrome-bottom"></div><div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Profile');
+
+/* ============ AUTH STORE (demo backend) ============ */
+const store={
+  get users(){ try{return JSON.parse(localStorage.getItem('vd_users')||'{}');}catch(_){return {};} },
+  set users(u){ localStorage.setItem('vd_users',JSON.stringify(u)); },
+};
+const SESSION_KEY='vd_session';
+function saveSession(s){ sessionStorage.setItem(SESSION_KEY,JSON.stringify(s)); }
+function showTab(t){
+  const inn=t==='in';
+  document.getElementById('formIn').style.display=inn?'block':'none';
+  document.getElementById('formUp').style.display=inn?'none':'block';
+  document.getElementById('tabSignin').classList.toggle('on',inn);
+  document.getElementById('tabSignup').classList.toggle('on',!inn);
+  document.getElementById('authTitle').textContent=inn?'Welcome back':'Create your account';
+  document.getElementById('authSub').textContent=inn
+    ?'Sign in to your reports, bookings and family health.'
+    :'One account for you and your family\u2019s diagnostics.';
+}
+function doSignIn(e){
+  e.preventDefault();
+  const ph=document.getElementById('inPhone').value.trim();
+  const pw=document.getElementById('inPass').value;
+  if(pw.length<6){ toast('Password must be at least 6 characters'); return false; }
+  const u=store.users[ph];
+  const name=u?u.name:'Srinivas M.';   /* demo fallback profile */
+  saveSession({phone:ph,name,age:u?.age||41,signedAt:Date.now()});
+  toast(`Welcome back, ${name.split(' ')[0]} ✓`);
+  location.href='index.html'; return false;
+}
+function doSignUp(e){
+  e.preventDefault();
+  const btn=document.getElementById('upBtn');
+  /* stage 1: validate then show OTP */
+  if(btn.dataset.stage!=='otp'){
+    if(!document.getElementById('upConsent').checked){ toast('Please accept the consent to continue'); return false; }
+    document.getElementById('otpPhone').textContent=document.getElementById('upPhone').value.trim();
+    document.getElementById('otpBlock').style.display='block';
+    btn.dataset.stage='otp'; btn.textContent='Verify OTP & finish';
+    toast('OTP sent via SMS (demo code 4821)');
+    return false;
+  }
+  /* stage 2: verify OTP */
+  const code=[...document.querySelectorAll('.otp-row input')].map(i=>i.value).join('');
+  if(code!=='4821'){ toast('Incorrect OTP — check the demo code 4821'); return false; }
+  const ph=document.getElementById('upPhone').value.trim();
+  const users=store.users;
+  users[ph]={name:document.getElementById('upName').value.trim(),
+             age:+document.getElementById('upAge').value||null,
+             createdAt:Date.now()};
+  store.users=users;
+  saveSession({phone:ph,name:users[ph].name,age:users[ph].age,signedAt:Date.now(),new:true});
+  toast('Account created ✓ Welcome to Vanaja');
+  location.href='family.html'; return false;   /* new users land on family setup */
+}
+
+/* signed-in guard helper used across the app */
+window.vdAuth={
+  user(){ try{return JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');}catch(_){return null;} },
+  require(){ if(!this.user()){ toast('Please sign in first'); setTimeout(()=>location.href='login.html',600); } return this.user(); },
+  logout(){ sessionStorage.removeItem(SESSION_KEY); }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnostic Tests — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.8rem">
+  <div class="eyebrow">70+ pathology tests</div>
+  <h1>Diagnostic Tests</h1>
+  <form onsubmit="return doSearch(event)" style="display:flex;gap:.6rem;max-width:34rem;margin:1rem 0 1.4rem">
+    <input class="input" id="q" placeholder="Search tests — CBC, sugar, thyroid…" aria-label="Search tests">
+    <button class="btn btn-primary">Search</button>
+  </form>
+  <div id="searchChips" style="display:flex;flex-wrap:wrap;gap:.45rem;margin:.4rem 0 .6rem"></div>
+  <p id="intentNote" style="color:var(--maroon-600);font-weight:700;display:none"></p>
+  <div class="table-wrap card" style="padding:.4rem .8rem;overflow-x:auto">
+    <table class="table" id="testTable">
+      <thead><tr><th>Test</th><th>Category</th><th>Preparation</th><th>Price</th><th></th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Tests');
+renderSearchChips('searchChips');
+
+function render(q){
+  const r = smartSearch(q||'');
+  const noteEl = document.getElementById('intentNote');
+  if (r.note){ noteEl.style.display='block'; noteEl.textContent='💡 '+r.note+' — suggested for you:'; }
+  else noteEl.style.display='none';
+  const offers = loadOffers();
+  document.querySelector('#testTable tbody').innerHTML =
+    [...new Map([...r.packages.map(p=>({kind:'Package',id:p.id,name:p.name,cat:'Package',prep:p.prep,cur:p.currentPrice,orig:p.originalPrice})),
+                ...r.tests.map(t=>{const o=offers.find(x=>x.ref===t.id&&x.active);return {kind:'Test',id:t.id,name:t.name,cat:t.cat,prep:t.prep,cur:t.price??o?.currentPrice,orig:o&&o.currentPrice<t.price?o.originalPrice:null};})]
+       .map(x=>[x.id,x])).values()]
+    .map(x=>`<tr>
+      <td><b>${x.name}</b></td><td><span class="chip">${x.cat}</span></td><td style="font-size:.85rem;color:var(--ink-muted)">${x.prep}</td>
+      <td>${x.orig&&x.cur!=null?`<span class="badge-save">Save ${savingsPct({originalPrice:x.orig,currentPrice:x.cur})}%</span> `:''}<span class="price" style="font-size:1.05rem">${fmtINR(x.cur)}</span>${x.orig?`<span class="price-strike">${fmtINR(x.orig)}</span>`:''}</td>
+      <td><a class="btn btn-primary btn-sm" href="booking.html?${x.kind==='Package'?'package':'test'}=${x.id}">Book</a></td>
+    </tr>`).join('');
+}
+function doSearch(e){ e.preventDefault(); render(document.getElementById('q').value); history.replaceState(null,'','?q='+encodeURIComponent(document.getElementById('q').value)); return false; }
+
+render(new URLSearchParams(location.search).get('q') || '');
+const qi=document.getElementById('q'); if (qi && new URLSearchParams(location.search).get('q')) qi.value=new URLSearchParams(location.search).get('q');
+</script>
+</body>
+</html>

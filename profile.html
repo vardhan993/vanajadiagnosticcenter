@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+.pf-avatar{width:72px;height:72px;border-radius:50%;background:var(--grad-accent);color:#fff;
+  display:grid;place-items:center;font-weight:800;font-size:1.8rem;}
+.link-row{display:flex;justify-content:space-between;align-items:center;padding:.85rem .2rem;
+  border-bottom:1px dashed var(--border);text-decoration:none;color:inherit;font-weight:600;font-size:.92rem;}
+.link-row:last-child{border-bottom:none;}
+.link-row:hover{color:var(--maroon-600);}
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem;max-width:760px">
+  <div class="card" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+    <div class="pf-avatar" id="pfAvatar">V</div>
+    <div style="flex:1;min-width:200px">
+      <h1 style="margin:0;font-size:1.3rem" id="pfName">Guest</h1>
+      <span style="color:var(--ink-muted)" id="pfMeta">Not signed in</span>
+      <div style="margin-top:.4rem"><span class="chip">Free plan</span> ·
+        <a href="membership.html" style="color:var(--maroon-600);font-weight:700;font-size:.85rem">Upgrade to Health+ →</a></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" id="authBtn" onclick="authAction()">Sign in</button>
+  </div>
+
+  <section class="card" style="margin-top:1.2rem">
+    <h3>Account</h3>
+    <a class="link-row" href="family.html"><span>👨‍👩‍👧 Family members &amp; profiles</span><span>›</span></a>
+    <a class="link-row" href="membership.html"><span>⭐ Membership — Vanaja Health+</span><span>›</span></a>
+    <a class="link-row" href="#" onclick="toast('Saved addresses (demo)');return false"><span>📍 My addresses</span><span>›</span></a>
+    <a class="link-row" href="#" onclick="toast('Payment methods & history (demo)');return false"><span>💳 Payments &amp; billing</span><span>›</span></a>
+  </section>
+
+  <section class="card" style="margin-top:1.2rem">
+    <h3>Health</h3>
+    <a class="link-row" href="reports.html"><span>🗂️ My reports &amp; vault</span><span>›</span></a>
+    <a class="link-row" href="health-score.html"><span>❤️ Health intelligence score</span><span>›</span></a>
+    <a class="link-row" href="trends.html"><span>📈 Predictive trends</span><span>›</span></a>
+    <a class="link-row" href="reminders.html"><span>🔔 Reminders &amp; privacy consent</span><span>›</span></a>
+  </section>
+
+  <section class="card" style="margin-top:1.2rem">
+    <h3>Preferences</h3>
+    <div style="display:flex;flex-direction:column;gap:.6rem">
+      <button class="btn btn-ghost btn-sm" style="text-align:left" onclick="toggleLargeText()">🔍 Toggle elder-friendly large text</button>
+      <button class="btn btn-ghost btn-sm" style="text-align:left" onclick="toggleTheme()">◐ Toggle dark mode</button>
+    </div>
+  </section>
+
+  <p class="disclaimer" style="margin-top:1.2rem">Your account data is encrypted at rest, every access is
+  audit-logged, and you can export or delete your records anytime.</p>
+</main>
+
+<div id="chrome-fab"></div><div id="chrome-bottom"></div><div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Profile');
+function getUser(){ try{return JSON.parse(sessionStorage.getItem('vd_session')||'null');}catch(_){return null;} }
+function render(){
+  const u=getUser();
+  document.getElementById('pfName').textContent = u? u.name : 'Guest';
+  document.getElementById('pfAvatar').textContent = u? u.name[0].toUpperCase() : 'V';
+  document.getElementById('pfMeta').textContent = u? `+${u.phone.replace('+','')} · Member since ${new Date(u.signedAt).toLocaleDateString('en-IN',{month:'short',year:'numeric'})}` : 'Not signed in';
+  const b=document.getElementById('authBtn');
+  b.textContent = u? 'Sign out' : 'Sign in';
+}
+function authAction(){
+  if(getUser()){ sessionStorage.removeItem('vd_session'); toast('Signed out — see you soon'); render(); }
+  else location.href='login.html';
+}
+render();
+</script>
+</body>
+</html>

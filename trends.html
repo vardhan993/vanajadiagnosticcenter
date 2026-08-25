@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Predictive Health Trends — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+/* consent gate */
+.consent-gate { max-width:34rem; margin:1.4rem auto; text-align:center; padding:2rem 1.4rem; }
+.gate-lock { font-size:2.6rem; }
+
+/* trend cards */
+.trend-card { display:flex; align-items:center; gap:.9rem; padding:.9rem 1rem; border-radius:var(--r-lg);
+  background:var(--surface-2); border:1px solid var(--border); }
+.tr-up   { border-left:4px solid #B36A00; }
+.tr-down { border-left:4px solid #1E9E6A; }
+.tr-flat { border-left:4px solid var(--navy-500); }
+.tr-info { border-left:4px solid var(--ink-faint); opacity:.75; }
+.trend-arrow { font-size:1.5rem; flex:none; }
+.hedge-tag { display:inline-block; font-size:.64rem; font-weight:800; letter-spacing:.06em;
+  background:rgba(0,51,102,.08); color:var(--navy-600); border-radius:var(--r-full);
+  padding:.1rem .55rem; margin-top:.3rem; text-transform:uppercase; }
+[data-theme="dark"] .hedge-tag { background:rgba(21,92,153,.22); color:var(--navy-300); }
+
+/* history chips */
+.hist-chips { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.45rem; }
+.hist-chip { font-size:.7rem; font-weight:700; background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-full); padding:.12rem .55rem; color:var(--ink-muted); }
+
+/* chart */
+.big-chart { width:100%; height:auto; }
+.legend-dot { display:inline-block; width:8px;height:8px;border-radius:50%;margin-right:.3rem;vertical-align:middle;}
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="eyebrow">Vanaja AI · Longitudinal Analysis</div>
+  <div class="section-head"><h1>Predictive Health Trends</h1></div>
+  <p style="max-width:46rem;color:var(--ink-muted)">With your consent and enough history, Vanaja AI surfaces
+  <b>how your results are changing between tests</b>. This is descriptive, not predictive of disease —
+  the app avoids claiming certainty or diagnosing future conditions.</p>
+
+  <!-- ============ CONSENT GATE ============ -->
+  <section class="card consent-gate" id="consentGate">
+    <div class="gate-lock">🔐</div>
+    <h3>Trends need your consent</h3>
+    <p style="font-size:.9rem;color:var(--ink-muted)">To compare results across your reports, Vanaja AI needs
+    permission to analyse your report history. This runs only on your records, is audit-logged, and you can
+    withdraw it anytime.</p>
+    <label style="display:flex;gap:.6rem;align-items:flex-start;text-align:left;font-size:.88rem;margin:.9rem 0;
+      padding:.8rem 1rem;background:var(--surface-2);border-radius:var(--r-md)">
+      <input type="checkbox" id="consentChk" style="margin-top:.15rem">
+      <span>I consent to Vanaja AI analysing my past reports to show me how my values change over time.
+      I understand these are <b>informational observations, not predictions or diagnoses</b>.</span>
+    </label>
+    <button class="btn btn-primary btn-lg btn-glow" onclick="grantConsent()">Enable my health trends</button>
+    <p style="font-size:.76rem;color:var(--ink-faint);margin-top:.8rem">Withdraw anytime from Profile → Privacy.</p>
+  </section>
+
+  <!-- ============ TRENDS (post-consent) ============ -->
+  <div id="trendsWrap" style="display:none">
+
+    <!-- insufficient-data notice example -->
+    <div class="disclaimer" style="margin-bottom:1rem">
+      <b>How to read this:</b> each observation compares your available test results. Where history is thin,
+      we say so rather than guess. Nothing here predicts future disease — it describes what changed.</div>
+
+    <!-- HbA1c trend -->
+    <section class="card ai-glow" style="margin-bottom:1rem">
+      <h3>🍬 HbA1c — sugar control</h3>
+      <div class="trend-card tr-up" style="margin-top:.6rem">
+        <span class="trend-arrow">📈</span>
+        <div style="flex:1">
+          <b>"Your HbA1c has increased across your last two available tests."</b><br>
+          <small style="color:var(--ink-muted)">5.4% (Mar 2024) → 5.6% (Feb 2026) → 5.8% (latest). A steady rise worth
+          discussing with your doctor — still below the diabetes range.</small>
+          <div class="hist-chips">
+            <span class="hist-chip">Mar 2024 · 5.4%</span>
+            <span class="hist-chip">Feb 2026 · 5.6%</span>
+            <span class="hist-chip">Latest · 5.8%</span>
+          </div>
+          <span class="hedge-tag">Observation · not a prediction</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vitamin D trend -->
+    <section class="card ai-glow" style="margin-bottom:1rem">
+      <h3>☀️ Vitamin D</h3>
+      <div class="trend-card tr-down" style="margin-top:.6rem">
+        <span class="trend-arrow">📉</span>
+        <div style="flex:1">
+          <b>"Your Vitamin D result has changed compared with your previous result."</b><br>
+          <small style="color:var(--ink-muted)">14 → 29 ng/mL since Dec 2024 — moving toward the 30 ng/mL target,
+          consistent with your supplement routine.</small>
+          <div class="hist-chips">
+            <span class="hist-chip">Dec 2024 · 14</span>
+            <span class="hist-chip">Nov 2025 · 22</span>
+            <span class="hist-chip">Latest · 29</span>
+          </div>
+          <span class="hedge-tag">Observation · not a prediction</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cholesterol flat -->
+    <section class="card ai-glow" style="margin-bottom:1rem">
+      <h3>❤️ LDL cholesterol</h3>
+      <div class="trend-card tr-flat" style="margin-top:.6rem">
+        <span class="trend-arrow">➡️</span>
+        <div style="flex:1">
+          <b>No meaningful change across your last three lipid panels.</b><br>
+          <small style="color:var(--ink-muted)">Values have stayed within a narrow band — your current routine appears
+          consistent.</small>
+          <div class="hist-chips">
+            <span class="hist-chip">2024 · 108</span>
+            <span class="hist-chip">2025 · 112</span>
+            <span class="hist-chip">2026 · 110 mg/dL</span>
+          </div>
+          <span class="hedge-tag">Stable pattern</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- insufficient data example -->
+    <section class="card" style="margin-bottom:1rem">
+      <h3>🦋 Thyroid — not enough recent data</h3>
+      <div class="trend-card tr-info" style="margin-top:.6rem">
+        <span class="trend-arrow">ℹ️</span>
+        <div style="flex:1">
+          <b>Only one thyroid result on file (Aug 2024).</b><br>
+          <small style="color:var(--ink-muted)">Trends need at least two results. Book a Thyroid Complete to start tracking.</small>
+          <a class="btn btn-primary btn-sm" style="display:inline-flex;margin-left:.6rem;vertical-align:middle"
+             href="booking.html?test=thyroid">Book Thyroid Complete</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Chart -->
+    <section class="card">
+      <h3>Your values side by side</h3>
+      <svg class="big-chart" viewBox="0 0 600 220" role="img" aria-label="Trend chart of HbA1c and Vitamin D over time">
+        <!-- gridlines -->
+        <g stroke="var(--border)" stroke-width="1"><line x1="50" y1="20" x2="580" y2="20"/><line x1="50" y1="70" x2="580" y2="70"/><line x1="50" y1="120" x2="580" y2="120"/><line x1="50" y1="170" x2="580" y2="170"/></g>
+        <text x="10" y="24" font-size="11" fill="var(--ink-faint)">HbA1c %</text>
+        <text x="10" y="124" font-size="11" fill="var(--ink-faint)">Vit D</text>
+        <!-- HbA1c line 5.4→5.8 mapped 150→60 -->
+        <polyline points="90,150 250,105 410,95 570,60" fill="none" stroke="#D98E04" stroke-width="3.5" stroke-linecap="round"/>
+        <g fill="#D98E04"><circle cx="90" cy="150" r="5"/><circle cx="250" cy="105" r="5"/><circle cx="410" cy="95" r="5"/><circle cx="570" cy="60" r="5"/></g>
+        <!-- VitD line 14→29 mapped 190→80 -->
+        <polyline points="90,190 330,140 570,80" fill="none" stroke="#8B2E5F" stroke-width="3.5" stroke-linecap="round"/>
+        <g fill="#8B2E5F"><circle cx="90" cy="190" r="5"/><circle cx="330" cy="140" r="5"/><circle cx="570" cy="80" r="5"/></g>
+        <!-- x labels -->
+        <g font-size="11" fill="var(--ink-faint)" text-anchor="middle">
+          <text x="90" y="208">Dec 2024</text><text x="250" y="208">Mar 2025</text><text x="410" y="208">Feb 2026</text><text x="570" y="208">Now</text>
+        </g>
+      </svg>
+      <p style="font-size:.8rem;color:var(--ink-faint);margin:.3rem 0 0">
+        <span class="legend-dot" style="background:#D98E04"></span>HbA1c %
+        &nbsp;&nbsp;<span class="legend-dot" style="background:#8B2E5F"></span>Vitamin D ng/mL</p>
+    </section>
+
+    <!-- Safety footer -->
+    <div class="disclaimer" style="margin-top:1.2rem">
+      <b>Safety notice:</b> Trend observations describe changes between your past results. They do not predict
+      whether you will develop any condition and they are not diagnoses. Only a qualified healthcare professional
+      can interpret your results in the context of your full health picture.
+    </div>
+  </div>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Reports');
+
+/* ============ CONSENT GATE ============ */
+function grantConsent(){
+  if(!document.getElementById('consentChk').checked){ toast('Please tick the consent box first'); return; }
+  localStorage.setItem('vd_trends_consent','1');
+  toast('Consent saved — audit logged ✓ Trends unlocked');
+  unlock();
+}
+function unlock(){
+  const ok=localStorage.getItem('vd_trends_consent')==='1';
+  document.getElementById('consentGate').style.display=ok?'none':'block';
+  document.getElementById('trendsWrap').style.display=ok?'block':'none';
+}
+unlock();
+
+/* withdraw hook for Profile → Privacy (demo) */
+window.withdrawTrendConsent=function(){
+  localStorage.removeItem('vd_trends_consent');
+  toast('Consent withdrawn — trend analysis disabled');
+  unlock();
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Intelligence Score — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+/* ===== Big score ring ===== */
+.score-hero { text-align:center; padding:1.6rem 1rem 1.2rem;
+  background:linear-gradient(135deg,rgba(0,51,102,.07),rgba(107,27,71,.06));
+  border:1px solid var(--border); border-radius:var(--r-xl); }
+.big-ring {
+  --p: 82;
+  width:min(220px,60vw); height:min(220px,60vw); margin:.6rem auto;
+  border-radius:50%;
+  background: conic-gradient(from -90deg,
+    #B36A00 0 calc(var(--p)*.35),
+    var(--maroon-600) calc(var(--p)*.35) var(--p),
+    color-mix(in srgb,var(--surface) 88%,var(--border)) var(--p) 100%);
+  display:grid; place-items:center; position:relative;
+}
+.big-ring::after{ content:""; position:absolute; inset:14px; border-radius:50%; background:var(--surface);
+  box-shadow:inset 0 2px 10px rgba(0,19,46,.06); }
+.ring-center{ position:relative; z-index:1; }
+.ring-num { font-size:clamp(2.6rem,7vw,3.4rem); font-weight:800; line-height:1; color:var(--ink);
+  font-variant-numeric:tabular-nums; }
+.ring-denom { font-size:1rem; color:var(--ink-faint); font-weight:700; }
+.ring-verdict { font-size:.95rem; font-weight:800; color:#B36A00; margin-top:.15rem; }
+
+/* ===== Factor bars ===== */
+.factor-row { display:flex; align-items:center; gap:.9rem; padding:.75rem .4rem; border-bottom:1px dashed var(--border); }
+.factor-row:last-child { border-bottom:none; }
+.f-emoji { font-size:1.25rem; width:30px; text-align:center; flex:none; }
+.f-name { flex:1; min-width:130px; }
+.f-name b { font-size:.92rem; }
+.f-name small { display:block; color:var(--ink-faint); font-size:.76rem; }
+.f-bar { flex:1.2; max-width:230px; height:9px; border-radius:5px; background:var(--navy-100); overflow:hidden; }
+[data-theme="dark"] .f-bar { background:rgba(255,255,255,.08); }
+.f-fill { height:100%; border-radius:5px; transition:width 1.1s cubic-bezier(.2,.7,.2,1); }
+.f-val { width:44px; text-align:right; font-weight:800; font-variant-numeric:tabular-nums; flex:none; }
+.f-good{background:linear-gradient(90deg,#1E9E6A,#3FC58E);} .f-mid{background:linear-gradient(90deg,#D98E04,#F0C36A);}
+.f-low{background:linear-gradient(90deg,#B3261E,#E06C5F);}
+
+/* factor detail chips */
+.f-chip { cursor:pointer; }
+.f-detail { font-size:.82rem; color:var(--ink-muted); background:var(--surface-2);
+  border-radius:var(--r-md); padding:.65rem .85rem; margin:-.2rem 0 .4rem; display:none; }
+.f-detail.open { display:block; }
+
+@media(max-width:560px){ .f-bar{max-width:none;} }
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="eyebrow">Vanaja Health Intelligence</div>
+  <div class="section-head"><h1>Wellness Score</h1></div>
+
+  <!-- ============ SCORE HERO ============ -->
+  <div class="score-hero">
+    <small style="letter-spacing:.14em;font-weight:800;color:var(--maroon-600);text-transform:uppercase">VANAJA HEALTH INTELLIGENCE SCORE</small>
+    <div class="big-ring" id="bigRing">
+      <div class="ring-center">
+        <span class="ring-num" id="scoreNum">0</span><span class="ring-denom"> / 100</span>
+        <div class="ring-verdict">Fair — room to improve</div>
+      </div>
+    </div>
+    <p style="font-size:.84rem;color:var(--ink-faint);max-width:34rem;margin:.4rem auto 0">
+      Computed from your latest Vanaja reports across 7 wellness markers.
+      Updated automatically after each new report.</p>
+  </div>
+
+  <!-- ============ INFORMATIONAL FRAMING (prominent) ============ -->
+  <div class="disclaimer" style="margin-top:1rem;border-left:4px solid var(--maroon-600)">
+    <b>⚕️ This is an informational wellness &amp; engagement score — not a clinical diagnosis.</b>
+    It summarizes patterns in your lab history to help you engage with your health journey.
+    It is <b>not</b> a guaranteed measure of health or disease risk. Only a qualified doctor can
+    interpret your results and assess your health.</div>
+
+  <!-- ============ FACTORS ============ -->
+  <section class="card" style="margin-top:1.3rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem">
+      <h3 style="margin:0">Score factors</h3>
+      <small style="color:var(--ink-faint)">Tap a factor to see what's driving it</small>
+    </div>
+    <div id="factorList" style="margin-top:.6rem"></div>
+  </section>
+
+
+  <!-- ============ PERSONALIZED INSIGHTS FEED (Phase 3) ============ -->
+  <section class="card ai-glow" style="margin-top:1.3rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+      <h3 style="margin:0">✦ Personalized insights for you</h3>
+      <button class="btn btn-maroon btn-sm" id="piNarrate" onclick="narrateInsights()" style="display:none">✨ Ask AI to explain</button>
+    </div>
+    <p style="font-size:.8rem;color:var(--ink-faint);margin:.2rem 0 .7rem">Generated from your reports, family profiles and reminder schedules — informational only.</p>
+    <div style="display:flex;flex-direction:column;gap:.55rem" id="piFeed"></div>
+  </section>
+
+  <!-- ============ WHAT CHANGED + RECOMMENDED NEXT STEPS ============ -->
+  <div class="grid grid-2" style="margin-top:1.3rem;align-items:start">
+    <section class="card">
+      <h3>What moved your score</h3>
+      <div class="timeline">
+        <div class="timeline-item"><b>Vitamin D ↑ improved</b><br><span style="font-size:.85rem;color:var(--ink-muted)">+6 pts since May — supplements working</span></div>
+        <div class="timeline-item"><b>HbA1c ↓ slipped</b><br><span style="font-size:.85rem;color:var(--ink-muted)">−4 pts this quarter — discuss diet with your doctor</span></div>
+        <div class="timeline-item"><b>Lipid panel due</b><br><span style="font-size:.85rem;color:var(--ink-muted)">Refresh due Nov — keeps heart markers current</span></div>
+      </div>
+    </section>
+    <section class="card">
+      <h3>Suggested next steps</h3>
+      <ul style="list-style:none;padding:0;line-height:2.1;font-size:.9rem">
+        <li>🩸 Book the Lipid Profile refresh → keeps Heart markers current</li>
+        <li>🍬 HbA1c recheck in 3 months → track the sugar trend</li>
+        <li>☀️ Continue Vitamin D routine → lock in the gains</li>
+        <li>🧑‍⚕️ Share your score &amp; reports with your doctor for clinical guidance</li>
+      </ul>
+      <div style="display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap">
+        <a class="btn btn-primary btn-sm" href="recommender.html">🎯 Plan my tests</a>
+        <a class="btn btn-maroon btn-sm" href="reports.html">View my vault</a>
+      </div>
+    </section>
+  </div>
+
+  <p class="disclaimer" style="margin-top:1.2rem">AI-generated information is for educational and informational purposes
+  and does not replace advice, diagnosis, or treatment from a qualified healthcare professional.</p>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Reports');
+
+/* ================= SCORE DATA ================= */
+const FACTORS=[
+ {name:'Blood health',     icon:'🩸', score:88, band:'good', basis:'CBC Aug 2026',
+  why:'Haemoglobin and platelets healthy. WBC slightly high — commonly reactive, worth a recheck.'},
+ {name:'Sugar monitoring', icon:'🍬', score:64, band:'mid',  basis:'HbA1c Feb 2026 · 5.8%',
+  why:'In the prediabetes range and trending up over 3 years. Diet review and a 3-month recheck advised.'},
+ {name:'Heart markers',    icon:'❤️', score:81, band:'good', basis:'Lipid Panel May 2026',
+  why:'LDL stable and in range across panels. Refresh due Nov to keep the picture current.'},
+ {name:'Liver markers',    icon:'🫀', score:90, band:'good', basis:'Full Body Jul 2025',
+  why:'ALT/AST well within range. No concerns flagged by AI or pathologist.'},
+ {name:'Kidney markers',   icon:'💧', score:86, band:'good', basis:'Full Body Jul 2025',
+  why:'Creatinine and eGFR normal. Keep hydration up, especially in summer.'},
+ {name:'Thyroid markers',  icon:'🦋', score:92, band:'good', basis:'Thyroid Aug 2024',
+  why:'TSH normal at last check. Annual thyroid screening recommended for your age group.'},
+ {name:'Vitamin markers',  icon:'☀️', score:74, band:'mid',  basis:'Vitamin D Nov 2025 · 29 ng/mL',
+  why:'Big improvement from 14 ng/mL baseline. Nearly at target — continue the routine.'},
+];
+const BAND={good:'#1E9E6A',mid:'#D98E04',low:'#B3261E'};
+const WEIGHTED=Math.round(FACTORS.reduce((s,f)=>s+f.score,0)/FACTORS.length);
+
+/* ================= RENDER RING (animated count-up) ================= */
+document.documentElement.style.setProperty('--p',WEIGHTED);
+requestAnimationFrame(()=>{
+  document.getElementById('bigRing').style.setProperty('--p',WEIGHTED);
+  const el=document.getElementById('scoreNum'),t0=performance.now();
+  (function step(t){ const k=Math.min(1,(t-t0)/1400),ease=1-Math.pow(1-k,3);
+    el.textContent=Math.round(WEIGHTED*ease); if(k<1)requestAnimationFrame(step); })(t0);
+});
+function verdict(s){ return s>=85?['Strong — keep it up','#1E7A54']:s>=70?['Fair — room to improve','#B36A00']:['Needs attention','#B3261E']; }
+const [vTxt,vClr]=verdict(WEIGHTED);
+document.querySelector('.ring-verdict').textContent=vTxt;
+document.querySelector('.ring-verdict').style.color=vClr;
+
+/* ================= RENDER FACTORS ================= */
+document.getElementById('factorList').innerHTML=FACTORS.map((f,i)=>`
+  <div class="factor-row f-chip" onclick="toggleDetail(${i})">
+    <span class="f-emoji">${f.icon}</span>
+    <span class="f-name"><b>${f.name}</b><small>${f.basis}</small></span>
+    <span class="f-bar"><span class="f-fill f-${f.band}" style="width:0%" data-w="${f.score}"></span></span>
+    <span class="f-val" style="color:${BAND[f.band]}">${f.score}</span>
+  </div>
+  <div class="f-detail" id="fd${i}">${f.why}</div>`).join('');
+
+/* animate bars when visible */
+const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){
+  e.target.style.width=e.target.dataset.w+'%'; io.unobserve(e.target);} }),{threshold:.4});
+document.querySelectorAll('.f-fill').forEach(el=>io.observe(el));
+
+function toggleDetail(i){
+  document.getElementById('fd'+i).classList.toggle('open');
+}
+
+/* ================= PHASE 3: PERSONALIZED INSIGHTS ENGINE ================= */
+function buildInsights(){
+  const out=[];
+  /* from score factors */
+  FACTORS.filter(f=>f.band!=='good').forEach(f=>out.push({
+    icon:f.icon, kind:f.band==='mid'?'watch':'attention',
+    text:`${f.name} is your lowest-scoring area (${f.score}/100). ${f.why}` }));
+  /* from vault history */
+  out.push({icon:'📈',kind:'watch',text:'Your HbA1c has risen across your last three tests (5.4 → 5.8%). Still below the diabetes range — a diet conversation with your doctor would be timely.'});
+  out.push({icon:'📉',kind:'good',text:'Vitamin D has improved from 14 to 29 ng/mL since your 2024 baseline. Keep the current routine.'});
+  /* family flags */
+  try{
+    const fam=JSON.parse(localStorage.getItem('vd_family_consents')||'{}');
+    if(fam.father) out.push({icon:'👨',kind:'attention',text:"Your father's Lipid Profile showed LDL above range in May — his cardiac panel is due Sep 2026."});
+    if(fam.mother) out.push({icon:'👩',kind:'watch',text:"Your mother's annual checkup is overdue (last: Jun 2025). A combined home collection could cover both of you."});
+  }catch(_){}
+  /* reminders */
+  out.push({icon:'🔔',kind:'watch',text:'Your Lipid Profile refresh is due in November — booking early keeps your Heart markers current.'});
+  return out;
+}
+const KIND={good:['#1E9E6A','✅'],watch:['#B36A00','👀'],attention:['#B3261E','⚠️']};
+(function renderPI(){
+  const feed=document.getElementById('piFeed'); if(!feed) return;
+  feed.innerHTML=buildInsights().map(i=>{
+    const [clr,ic]=KIND[i.kind];
+    return `<div class="trend-card" style="border-left:4px solid ${clr};background:var(--surface-2);border-radius:var(--r-lg);padding:.7rem .9rem;display:flex;gap:.6rem;align-items:flex-start">
+      <span style="font-size:1.15rem">${i.icon}</span>
+      <span style="font-size:.88rem;line-height:1.6">${i.text}</span></div>`;
+  }).join('');
+})();
+/* live LLM narration of the whole insight set */
+async function narrateInsights(){
+  const btn=document.getElementById('piNarrate');
+  if(!window.VanajaAI || !VanajaAI.hasKey()){
+    location.href='ai-assistant.html'; return;   /* no key → chat handles it */
+  }
+  btn.disabled=true; btn.textContent='✦ AI is writing…';
+  try{
+    const items=buildInsights().map(i=>'- '+i.text).join('\n');
+    const out=await VanajaAI.chat([{role:'user',
+      content:'Here are automated observations for one patient (score factors, trends, family flags, due reminders):\\n'+items+
+      '\\n\\nWrite a short, warm, personalised weekly summary (under 120 words) that groups these into: what improved, what needs attention, and one suggested next step. No diagnoses.'}],
+      {lang:'en'});
+    let box=document.getElementById('piNarration');
+    if(!box){ box=document.createElement('div'); box.id='piNarration'; box.className='ai-insight';
+      box.style.cssText='margin-top:.8rem;border-left-color:#8B2E5F';
+      document.getElementById('piFeed').after(box); }
+    box.innerHTML=`<b class="t">✦ Your weekly health summary</b><p>${out
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')}</p>`;
+  }catch(err){
+    toast&&toast('Live AI unreachable — showing standard insights');
+  }finally{ btn.disabled=false; btn.textContent='✨ Ask AI to explain'; }
+}
+if(window.VanajaAI && VanajaAI.hasKey()) document.getElementById('piNarrate').style.display='inline-flex';
+
+</script>
+</body>
+</html>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Home Sample Collection — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="eyebrow">Free Service</div>
+  <h1>Home Sample Collection</h1>
+  <p style="max-width:44rem;color:var(--ink-muted)">Skip the queue. A trained phlebotomist collects your sample safely at
+  your doorstep across Hyderabad &amp; Secunderabad — at no extra cost, at your chosen time.</p>
+
+  <!-- Flow -->
+  <div class="card" style="margin:1.4rem 0">
+    <div style="display:flex;gap:.4rem;overflow-x:auto;padding:.3rem 0;text-align:center">
+      <div style="min-width:110px"><div style="font-size:1.5rem">📅</div><b style="font-size:.82rem">Book Collection</b></div>
+      <div style="align-self:center;color:var(--ink-faint)">→</div>
+      <div style="min-width:110px"><div style="font-size:1.5rem">🧑‍🤝‍🧑</div><b style="font-size:.82rem">Select Patient</b></div>
+      <div style="align-self:center;color:var(--ink-faint)">→</div>
+      <div style="min-width:110px"><div style="font-size:1.5rem">🧪</div><b style="font-size:.82rem">Select Tests</b></div>
+      <div style="align-self:center;color:var(--ink-faint)">→</div>
+      <div style="min-width:110px"><div style="font-size:1.5rem">📍</div><b style="font-size:.82rem">Address & Slot</b></div>
+      <div style="align-self:center;color:var(--ink-faint)">→</div>
+      <div style="min-width:110px"><div style="font-size:1.5rem">💳</div><b style="font-size:.82rem">Payment</b></div>
+      <div style="align-self:center;color:var(--ink-faint)">→</div>
+      <div style="min-width:110px"><div style="font-size:1.5rem">✅</div><b style="font-size:.82rem">Sample Collected</b></div>
+      <div style="align-self:center;color:var(--ink-faint)">→</div>
+      <div style="min-width:110px"><div style="font-size:1.5rem">📄</div><b style="font-size:.82rem">Report Ready</b></div>
+    </div>
+  </div>
+
+  <div class="grid grid-2" style="align-items:stretch">
+    <form class="card" onsubmit="return bookPickup(event)" style="display:flex;flex-direction:column;gap:.8rem">
+      <h3>Schedule a pickup</h3>
+      <div class="field"><label>Patient</label>
+        <select class="input"><option>Self — Srinivas M.</option><option>Father</option><option>Mother</option><option>Spouse</option></select></div>
+      <div class="field"><label>Test / Package</label>
+        <select class="input" id="pkItem">
+          <option value="fullbody">Full Body Checkup — ₹4,999 (Save 25%)</option>
+          <option value="diabetes">Diabetes Care Package — ₹1,399 (Save 20%)</option>
+          <option value="thyroidpkg">Thyroid Complete — ₹749 (Save 17%)</option>
+          <option value="cbp">CBC — ₹300</option>
+          <option value="lpt">Lipid Profile — ₹600</option>
+        </select></div>
+      <div class="field"><label>Address</label>
+        <input class="input" required value="Flat 302, Sai Enclave, Kavadiguda, Secunderabad – 500003"></div>
+      <div class="grid grid-2">
+        <div class="field"><label>Date</label><input class="input" type="date" id="pkDate" required></div>
+        <div class="field"><label>Slot</label>
+          <select class="input"><option>7–8 AM</option><option>8–9 AM</option><option>9–10 AM</option><option>10 AM–12 PM</option><option>4–6 PM</option></select></div>
+      </div>
+      <button class="btn btn-maroon btn-lg" type="submit">Confirm Free Pickup →</button>
+      <p style="font-size:.78rem;color:var(--ink-faint);margin:0">Demo mode — no live payment is processed.</p>
+    </form>
+
+    <div style="display:flex;flex-direction:column;gap:1rem">
+      <div class="offer-card" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+        <span class="badge-save" style="align-self:flex-start;background:rgba(255,255,255,.18)">How it works</span>
+        <ul style="list-style:none;padding:0;line-height:2.2;font-size:.92rem;margin-top:.8rem">
+          <li>1️⃣ Book online or call <b>+91 90000 11580</b></li>
+          <li>2️⃣ Trained phlebotomist arrives in your slot</li>
+          <li>3️⃣ OTP verification + barcode-sealed sample</li>
+          <li>4️⃣ Same-day digital report on WhatsApp & email</li>
+        </ul>
+      </div>
+      <div class="card ai-glow">
+        <h3>Not sure which test?</h3>
+        <p style="font-size:.88rem;color:var(--ink-muted);margin:.2rem 0 .8rem">Ask Vanaja AI — "I want to check my sugar" and it will suggest the right panel.</p>
+        <a class="btn btn-maroon btn-sm" href="ai-assistant.html">Ask Vanaja AI ✦</a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Home');
+document.getElementById('pkDate').value = new Date(Date.now()+864e5).toISOString().slice(0,10);
+function bookPickup(e){
+  e.preventDefault();
+  sessionStorage.setItem('vd_cart', JSON.stringify([{id:document.getElementById('pkItem').value,type:'package'}]));
+  location.href = 'track.html';
+  return false;
+}
+</script>
+</body>
+</html>

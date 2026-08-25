@@ -1,0 +1,22 @@
+name: Upload PR file
+
+on: pull_request
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export the full file path
+        id: file
+        run: echo "path=$(realpath relative/path/to.file)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload file
+        uses: leandro-hermes/action-upload-file@v1.1.0
+        with:
+          host: 'example.com'
+          path: '/postFile'
+          filePath: ${{ steps.file.outputs.path }}
+          data: ${{ toJson(github.event.pull_request) }}

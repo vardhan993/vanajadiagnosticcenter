@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Branch Management — Vanaja Admin</title>
+<link rel="icon" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/theme.css">
+<style>
+.admin-layout{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
+@media(max-width:900px){.admin-layout{grid-template-columns:1fr}.sidenav{position:static!important;height:auto!important}}
+.sidenav{background:var(--navy-900);color:var(--navy-200);position:sticky;top:0;height:100vh;padding:1rem .8rem;display:flex;flex-direction:column;gap:.2rem}
+.sidenav a{display:flex;gap:.6rem;align-items:center;text-decoration:none;color:inherit;font-weight:700;font-size:.9rem;padding:.65rem .85rem;border-radius:var(--r-md)}
+.sidenav a:hover,.sidenav a[aria-current="page"]{background:rgba(255,255,255,.09);color:#fff}
+.branch-card{cursor:pointer;border-top:4px solid var(--navy-500)}
+.branch-card.sel{border-color:var(--maroon-600);box-shadow:var(--glow-maroon)}
+.b-kpi b{font-size:1.5rem;display:block;color:var(--navy-700)}
+[data-theme="dark"] .b-kpi b{color:var(--navy-300)}
+.b-kpi small{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted)}
+.hrs-row{display:flex;justify-content:space-between;padding:.3rem 0;font-size:.86rem;border-bottom:1px dashed var(--border)}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+ <aside class="sidenav">
+  <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem 1rem">
+   <img src="../assets/img/logo.png" alt="Vanaja" style="height:38px;background:#fff;border-radius:8px;padding:.15rem">
+   <b style="color:#fff;font-size:.9rem">AI Operations OS</b>
+  </div>
+  <a href="index.html">📊 Live Dashboard</a>
+  <a href="offers.html">🏷️ Packages & Offers</a>
+  <a href="patients.html">🧑‍💼 Patients CRM</a>
+  <a href="lab.html">🧪 Lab Workflow</a>
+  <a href="phlebo.html">🛵 Phlebotomist</a>
+  <a href="#" aria-current="page">🏥 Branches</a>
+  <div style="margin-top:auto;font-size:.78rem;padding:.6rem">Admin · audit on</div>
+ </aside>
+ <main style="padding:1.6rem;overflow-x:hidden">
+  <h1 style="margin:0 0 .2em">Branch management</h1>
+  <p style="color:var(--ink-muted);margin-top:0">Network of <b>3 centres</b> · Kavadiguda Main, Hasmathpet, Padmashali Colony</p>
+
+  <section class="grid grid-3" id="branchCards"></section>
+
+  <section class="card" id="detailCard" style="margin-top:1.3rem"><h3>Select a branch above</h3></section>
+ </main>
+</div>
+<script src="../assets/js/app.js"></script>
+<script>
+applyPrefs();
+const BRANCHES=[
+ {id:'kv',name:'Kavadiguda (Main)',addr:'Kavadiguda Main Rd, Secunderabad – 500003',rev:'₹8.9L',vol:48,staff:14,collections:38,rating:4.9,
+  hrs:{Mon:'7 AM – 10 PM',Tue:'7 AM – 10 PM',Wed:'7 AM – 10 PM',Thu:'7 AM – 10 PM',Fri:'7 AM – 10 PM',Sat:'7 AM – 10 PM',Sun:'7 AM – 2 PM'}},
+ {id:'hs',name:'Hasmathpet',addr:'Opp. Jamia Masjid, Bowenpally – 500009',rev:'₹6.1L',vol:33,staff:9,collections:27,rating:4.8,
+  hrs:{Mon:'7 AM – 9 PM',Tue:'7 AM – 9 PM',Wed:'7 AM – 9 PM',Thu:'7 AM – 9 PM',Fri:'7 AM – 9 PM',Sat:'7 AM – 9 PM',Sun:'7 AM – 1 PM'}},
+ {id:'pc',name:'Padmashali Colony',addr:'Secunderabad',rev:'₹3.4L',vol:19,staff:6,collections:11,rating:4.7,
+  hrs:{Mon:'8 AM – 8 PM',Tue:'8 AM – 8 PM',Wed:'8 AM – 8 PM',Thu:'8 AM – 8 PM',Fri:'8 AM – 8 PM',Sat:'8 AM – 8 PM',Sun:'Closed'}},
+];
+document.getElementById('branchCards').innerHTML=BRANCHES.map(b=>`
+ <article class="card branch-card card-hover b-kpi" id="bc-${b.id}" onclick="selectBranch('${b.id}')">
+  <small>${b.name}</small><b>${b.rev}</b><span style="font-size:.78rem;color:#1E9E6A;font-weight:700">${b.vol}% of volume</span>
+  <div style="margin-top:.4rem;font-size:.82rem;color:var(--ink-muted)">👥 ${b.staff} staff · 🛵 ${b.collections} collections/wk · ⭐ ${b.rating}</div>
+ </article>`).join('');
+function selectBranch(id){
+ document.querySelectorAll('.branch-card').forEach(c=>c.classList.remove('sel'));
+ document.getElementById('bc-'+id).classList.add('sel');
+ const b=BRANCHES.find(x=>x.id===id);
+ document.getElementById('detailCard').innerHTML=`
+  <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem">
+   <h3 style="margin:0">🏥 ${b.name}</h3>
+   <button class="btn btn-maroon btn-sm" onclick="toast('Edit form (demo)')">✏️ Edit branch</button>
+  </div>
+  <p style="color:var(--ink-muted);font-size:.88rem;margin:.3rem 0 .8rem">📍 ${b.addr} · ⭐ ${b.rating} patient rating</p>
+  <div class="grid grid-4" style="margin-bottom:1rem">
+   <div class="stat b-kpi" style="border-left-color:var(--maroon-600);padding:.8rem"><b>${b.vol}%</b><small>Volume share</small></div>
+   <div class="stat b-kpi" style="border-left-color:var(--maroon-600);padding:.8rem"><b>${b.staff}</b><small>Staff assigned</small></div>
+   <div class="stat b-kpi" style="border-left-color:var(--maroon-600);padding:.8rem"><b>${b.collections}</b><small>Home collections /wk</small></div>
+   <div class="stat b-kpi" style="border-left-color:var(--maroon-600);padding:.8rem"><b>${b.rev}</b><small>Revenue MTD</small></div>
+  </div>
+  <div class="grid grid-2">
+   <div><h4 style="margin:.2rem 0 .4rem">🕐 Opening hours</h4>
+    ${Object.entries(b.hrs).map(([d,h])=>`<div class="hrs-row"><span>${d}</span><b>${h}</b></div>`).join('')}
+    <button class="btn btn-primary btn-sm" style="margin-top:.7rem" onclick="toast('Hours updated — patient site syncs instantly (demo)')">Update hours</button></div>
+   <div><h4 style="margin:.2rem 0 .4rem">⚙️ Branch settings</h4>
+    <div class="hrs-row"><span>Home collection enabled</span><input type="checkbox" checked onchange="toast('Setting saved')"></div>
+    <div class="hrs-row"><span>Accepting walk-ins</span><input type="checkbox" checked onchange="toast('Setting saved')"></div>
+    <div class="hrs-row"><span>Same-day reports</span><input type="checkbox" checked onchange="toast('Setting saved')"></div>
+    <div class="hrs-row"><span>Slot interval</span><b>30 min</b></div>
+   </div>
+  </div>`;
+}
+</script>
+</body>
+</html>

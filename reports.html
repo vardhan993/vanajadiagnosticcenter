@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Health Vault 🔐 — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+.rep-row { display:flex; justify-content:space-between; align-items:center; gap:.8rem; padding:.85rem 0;
+  border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.rep-row:last-child { border-bottom:none; }
+
+/* Tree timeline */
+.vault-tree { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.92rem; line-height:2.05; overflow-x:auto; }
+.vt-year { color:var(--navy-700); font-weight:800; cursor:pointer; user-select:none; }
+[data-theme="dark"] .vt-year { color:var(--navy-300); }
+.vt-year::before { content:"▾ "; }
+.vt-year.closed::before { content:"▸ "; }
+.vt-items { border-left:2px solid var(--maroon-300); margin-left:.45rem; padding-left:1rem; }
+.vt-item { white-space:nowrap; }
+.vt-item a { color:var(--ink); text-decoration:none; }
+.vt-item a:hover { color:var(--maroon-600); }
+.vt-tag { font-family:'Plus Jakarta Sans',sans-serif; font-size:.66rem; font-weight:800; padding:.08rem .5rem;
+  border-radius:var(--r-full); vertical-align:middle; margin-left:.4rem; }
+.tag-ai   { background:rgba(139,46,95,.14); color:var(--maroon-600); }
+.tag-low  { background:rgba(179,106,0,.14); color:#B36A00; }
+.tag-hi   { background:rgba(179,38,30,.13); color:#B3261E; }
+.tag-ok   { background:rgba(30,158,106,.13); color:#1E7A54; }
+
+/* Trend cards */
+.trend-card { display:flex; align-items:center; gap:.9rem; padding:.8rem .9rem; border-radius:var(--r-lg);
+  background:var(--surface-2); border:1px solid var(--border); }
+.trend-spark { flex:none; }
+.tr-up   { border-left:4px solid #B36A00; }
+.tr-down { border-left:4px solid #1E9E6A; }
+.tr-flat { border-left:4px solid var(--navy-500); }
+.trend-arrow { font-size:1.5rem; line-height:1; }
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="section-head">
+    <div><div class="eyebrow">Secure Digital Records · End-to-end encrypted</div>
+    <h1>Digital Health Vault 🔐</h1></div>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+      <select class="input" id="fYear" style="width:auto" aria-label="Filter by year" onchange="filterVault(this.value, document.getElementById('fTest').value)">
+        <option value="">All years</option><option>2026</option><option>2025</option><option>2024</option>
+      </select>
+      <select class="input" id="fTest" style="width:auto" aria-label="Filter by test" onchange="filterVault(document.getElementById('fYear').value, this.value)">
+        <option value="">All tests</option><option>CBC</option><option>HbA1c</option><option>Lipid Profile</option><option>Vitamin D</option><option>Thyroid</option><option>Full Body Checkup</option>
+      </select>
+      <button class="btn btn-maroon btn-sm" onclick="toast('Compare mode: pick any two reports')">Compare reports</button>
+    </div>
+  </div>
+
+  <div class="grid grid-2" style="align-items:start">
+    <!-- LEFT: vault tree -->
+    <div class="card">
+      <h3>All records</h3>
+      <p style="font-size:.82rem;color:var(--ink-faint);margin-top:0">Click a year to fold/unfold. Every document is consent-controlled and audit-logged.</p>
+      <div class="vault-tree" id="vaultTree"></div>
+    </div>
+
+    <!-- RIGHT -->
+    <div>
+      <!-- AI LONGITUDINAL TRENDS -->
+      <section class="card ai-glow" style="margin-bottom:1rem">
+        <h3>🤖 AI Longitudinal Health Analysis</h3>
+        <p style="font-size:.86rem;color:var(--ink-muted);margin:.2rem 0 .8rem">Patterns Vanaja AI found across your 2024 → 2026 history:</p>
+        <div style="display:flex;flex-direction:column;gap:.55rem">
+          <div class="trend-card tr-up">
+            <svg class="trend-spark" width="72" height="30" viewBox="0 0 72 30" aria-hidden="true"><path d="M2 22 L19 20 L36 15 L53 12 L70 6" stroke="#B36A00" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+            <div><b>HbA1c increased over time</b><br><small style="color:var(--ink-muted)">5.4% → 5.8% across 3 years — still below the diabetes range, but worth watching. Discuss diet &amp; follow-up with your doctor.</small></div>
+            <span class="trend-arrow">📈</span>
+          </div>
+          <div class="trend-card tr-down">
+            <svg class="trend-spark" width="72" height="30" viewBox="0 0 72 30" aria-hidden="true"><path d="M2 6 L19 10 L36 16 L53 21 L70 24" stroke="#1E9E6A" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+            <div><b>Vitamin D improved</b><br><small style="color:var(--ink-muted)">14 → 29 ng/mL since starting supplements in 2024. Nearly at target — keep going! 🎉</small></div>
+            <span class="trend-arrow">📉</span>
+          </div>
+          <div class="trend-card tr-flat">
+            <svg class="trend-spark" width="72" height="30" viewBox="0 0 72 30" aria-hidden="true"><path d="M2 15 L19 14 L36 16 L53 14 L70 15" stroke="var(--navy-500)" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>
+            <div><b>Cholesterol stable</b><br><small style="color:var(--ink-muted)">LDL holding steady in range across all three lipid panels. Current lifestyle is working.</small></div>
+            <span class="trend-arrow">➡️</span>
+          </div>
+        </div>
+        <a class="btn btn-maroon btn-sm" style="margin-top:.9rem" href="trends.html">📈 See predictive trends →</a>
+        <a class="btn btn-ghost btn-sm" style="margin-top:.9rem" href="report-insights.html">Full AI Report Insights</a>
+      </section>
+
+      <!-- Timeline summary card -->
+      <section class="card" style="margin-bottom:1rem">
+        <h3>Health journey at a glance</h3>
+        <div class="timeline">
+          <div class="timeline-item"><b>2026</b><br><span style="font-size:.88rem;color:var(--ink-muted)">HbA1c · Lipid Profile · AI Health Analysis · CBC</span></div>
+          <div class="timeline-item"><b>2025</b><br><span style="font-size:.88rem;color:var(--ink-muted)">Full Body Checkup · Vitamin D · CBC</span></div>
+          <div class="timeline-item"><b>2024</b><br><span style="font-size:.88rem;color:var(--ink-muted)">CBC · Thyroid · Vitamin D (baseline)</span></div>
+        </div>
+      </section>
+
+      <!-- Controlled sharing -->
+      <section class="card">
+        <h3>🔐 Controlled sharing</h3>
+        <p style="font-size:.88rem;color:var(--ink-muted);margin-top:0">Share individual reports with doctors or family. Every share is consent-logged and expires automatically.</p>
+        <div class="table-wrap" style="overflow-x:auto"><table class="table">
+          <thead><tr><th>Shared with</th><th>Scope</th><th>Expires</th><th></th></tr></thead>
+          <tbody>
+            <tr><td>Dr. Anitha R. (Physician)</td><td>CBC only</td><td>in 3 days</td><td><button class="btn btn-sm btn-ghost" onclick="toast('Share revoked — access removed')">Revoke</button></td></tr>
+            <tr><td>Lakshmi (family)</td><td>All reports</td><td>in 30 days</td><td><button class="btn btn-sm btn-ghost" onclick="toast('Share revoked — access removed')">Revoke</button></td></tr>
+          </tbody>
+        </table></div>
+        <button class="btn btn-primary btn-sm" style="margin-top:.7rem" onclick="toast('Secure share link created — consent logged (demo)')">+ New secure share</button>
+      </section>
+    </div>
+  </div>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Reports');
+
+/* ============ VAULT DATA — matches spec tree ============ */
+const REPORTS=[
+ {year:'2026',date:'14 Aug',test:'CBC',member:'Self',status:'2 values watched',tag:'ai'},
+ {year:'2026',date:'02 May',test:'Lipid Profile',member:'Self',status:'LDL stable · in range',tag:'ok'},
+ {year:'2026',date:'18 Feb',test:'HbA1c',member:'Father',status:'5.8% · trending up',tag:'hi'},
+ {year:'2025',date:'09 Nov',test:'Vitamin D',member:'Self',status:'22 ng/mL · improving',tag:'low'},
+ {year:'2025',date:'17 Jul',test:'Full Body Checkup',member:'Self',status:'25+ tests · 2 flagged',tag:'ai'},
+ {year:'2025',date:'21 Jun',test:'CBC',member:'Mother',status:'Normal',tag:'ok'},
+ {year:'2024',date:'12 Dec',test:'Vitamin D',member:'Self',status:'14 ng/mL · deficient (baseline)',tag:'low'},
+ {year:'2024',date:'03 Aug',test:'Thyroid',member:'Self',status:'TSH normal',tag:'ok'},
+ {year:'2024',date:'19 Mar',test:'CBC',member:'Self',status:'Normal',tag:'ok'},
+];
+const TAGLBL={ai:['✨ AI','tag-ai'],low:['LOW','tag-low'],hi:['HIGH','tag-hi'],ok:['NORMAL','tag-ok']};
+
+function renderTree(year='',test=''){
+  const list=REPORTS.filter(r=>(!year||r.year===year)&&(!test||r.test===test));
+  const byYear={};
+  list.forEach(r=>{(byYear[r.year]=byYear[r.year]||[]).push(r);});
+  const years=Object.keys(byYear).sort().reverse();
+  const openAll=!year&&!test; /* auto-fold when filtering */
+  document.getElementById('vaultTree').innerHTML=years.map(y=>`
+    <details ${openAll?'open':''}>
+      <summary class="vt-year">${y}</summary>
+      <div class="vt-items">
+        ${byYear[y].map(r=>{
+          const [lbl,cls]=TAGLBL[r.tag]||['',''];
+          return `<div class="vt-item">├─ <a href="#" onclick="openReport('${r.test}','${r.date}');return false">${r.test}</a>
+            ${lbl?`<span class="vt-tag ${cls}">${lbl}</span>`:''}
+            <small style="color:var(--ink-faint)"> · ${r.date} · ${r.member}</small>
+            <a href="#" onclick="downloadReport('${r.test}','${r.year}','${r.date}');return false" title="Download PDF" style="margin-left:.4rem;color:var(--navy-500)">⬇</a></div>`;
+        }).join('')}
+      </div>
+    </details>`).join('')
+    ||'<p style="color:var(--ink-muted);font-family:inherit">No records match these filters.</p>';
+}
+function downloadReport(test,year,date){
+  /* demo: generates a small text placeholder; production streams the signed PDF */
+  const blob = new Blob([`VANAJA DIAGNOSTIC CENTRE\n${test} — ${date} ${year}\nPatient: Srinivas M. (demo export)\n\nAI-generated summary available in Report Insights.\n`],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`Vanaja_${test.replace(/\s+/g,'')}_${year}.txt`;
+  a.click(); URL.revokeObjectURL(a.href);
+  toast(`Downloading ${test} (${year}) ✓`);
+}
+function openReport(test,date){
+  toast(`Opening ${test} (${date}) — PDF viewer + AI insights`);
+  if(test==='CBC'&&date==='14 Aug') location.href='report-insights.html';
+}
+function filterVault(y,t){ renderTree(y,t); }
+renderTree();
+</script>
+</body>
+</html>

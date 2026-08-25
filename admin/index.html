@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Vanaja AI Operations OS</title>
+<link rel="icon" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/theme.css">
+<style>
+.admin-layout { display:grid; grid-template-columns:230px 1fr; min-height:100vh; }
+@media (max-width:900px){ .admin-layout { grid-template-columns:1fr; } .sidenav{position:static!important;height:auto!important;} }
+.sidenav { background:var(--navy-900); color:var(--navy-200); position:sticky; top:0; height:100vh; padding:1rem .8rem; display:flex; flex-direction:column; gap:.2rem; }
+.sidenav a { display:flex; gap:.6rem; align-items:center; text-decoration:none; color:inherit; font-weight:700; font-size:.9rem; padding:.65rem .85rem; border-radius:var(--r-md); }
+.sidenav a:hover, .sidenav a[aria-current="page"] { background:rgba(255,255,255,.09); color:#fff; }
+.kpi { position:relative; overflow:hidden; }
+.kpi b { font-size:1.9rem; color:var(--navy-700); display:block; font-variant-numeric:tabular-nums; }
+[data-theme="dark"] .kpi b { color:var(--navy-300); }
+.kpi small { color:var(--ink-muted); font-size:.78rem; font-weight:700; letter-spacing:.03em; text-transform:uppercase; }
+.kpi .delta { font-size:.76rem; font-weight:800; }
+.up{color:#1E9E6A}.down{color:#B3261E}
+.rolebar { display:flex; gap:.5rem; align-items:center; font-size:.83rem; }
+
+/* sparkline bars */
+.spark { display:flex; align-items:flex-end; gap:3px; height:38px; margin-top:.55rem; }
+.spark i { flex:1; border-radius:3px 3px 0 0; background:linear-gradient(180deg,var(--maroon-500),rgba(107,27,71,.25)); min-height:4px; }
+
+/* AI insight cards */
+.ai-insight { border-left:4px solid var(--maroon-600);
+  background:linear-gradient(135deg,rgba(107,27,71,.06),rgba(0,51,102,.04));
+  border-radius:var(--r-lg); padding:.95rem 1.1rem; }
+.ai-insight b.t { display:block; margin-bottom:.2rem; font-size:.93rem; }
+.ai-insight p { margin:0; font-size:.86rem; color:var(--ink-muted); line-height:1.6; }
+.ai-insight .act { margin-top:.55rem; display:flex; gap:.45rem; flex-wrap:wrap; }
+.conf-tag { font-size:.64rem; font-weight:800; letter-spacing:.06em; background:rgba(139,46,95,.13);
+  color:var(--maroon-600); padding:.12rem .55rem; border-radius:var(--r-full); vertical-align:middle;
+  text-transform:uppercase; float:right; }
+
+/* area heatmap rows */
+.area-row { display:flex; align-items:center; gap:.7rem; padding:.45rem 0; font-size:.88rem; }
+.area-bar { height:10px; border-radius:5px; flex:none; width:52%;
+  background:linear-gradient(90deg,var(--navy-500),var(--maroon-600)); }
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidenav">
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem 1rem">
+      <img src="../assets/img/logo.png" alt="Vanaja" style="height:38px;background:#fff;border-radius:8px;padding:.15rem">
+      <b style="color:#fff;font-size:.9rem">AI Operations OS</b>
+    </div>
+    <a href="index.html" aria-current="page">📊 Live Dashboard</a>
+    <a href="offers.html">🏷️ Packages & Offers</a>
+    <a href="patients.html">🧑‍💼 Patients CRM</a>
+    <a href="lab.html">🧪 Lab Workflow</a>
+    <a href="phlebo.html">🛵 Phlebotomist</a>
+    <a href="branches.html">🏥 Branches</a>
+    <a href="#" onclick="toast('Reports & audit logs (demo)');return false">🗂️ Audit Logs</a>
+    <div style="margin-top:auto;font-size:.78rem;padding:.6rem">
+      Logged in as <b style="color:#fff">Admin</b><br>Role-based access · Audit on
+    </div>
+  </aside>
+
+  <main style="padding:1.6rem;overflow-x:hidden">
+    <header style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;margin-bottom:1.4rem">
+      <div><h1 style="margin:0">Live Overview</h1>
+        <span style="color:var(--ink-muted);font-size:.88rem" id="hdrDate"></span></div>
+      <div class="rolebar">
+        <span class="chip">● LIVE</span>
+        <span class="chip">Role: Admin</span>
+        <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">◐</button>
+      </div>
+    </header>
+
+    <!-- ============ KPI ROW ============ -->
+    <section class="grid grid-4" id="kpiRow"></section>
+
+    <!-- second KPI row -->
+    <section class="grid grid-4" id="kpiRow2" style="margin-top:1rem"></section>
+
+    <!-- ============ OPS + AREAS ============ -->
+    <section class="grid grid-2" style="margin-top:1.3rem">
+      <div class="card">
+        <h3>Today at a glance</h3>
+        <div class="table-wrap" style="overflow-x:auto"><table class="table">
+          <thead><tr><th>Metric</th><th>Value</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Home collections scheduled</td><td><b>18</b></td><td><span class="dot dot-info"></span> 12 done</td></tr>
+            <tr><td>Samples collected today</td><td><b>96</b></td><td><span class="dot dot-ok"></span> on target</td></tr>
+            <tr><td>Samples in processing</td><td><b>27</b></td><td><span class="dot dot-warn pulse"></span> live</td></tr>
+            <tr><td>Reports pending pathologist</td><td><b>6</b></td><td><span class="dot dot-warn"></span> SLA 4h</td></tr>
+            <tr><td>Walk-in patients</td><td><b>64</b></td><td><span class="dot dot-ok"></span> steady</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="card">
+        <h3>🏠 Home-collection demand by area</h3>
+        <p style="font-size:.8rem;color:var(--ink-faint);margin-top:0">Bookings this month, grouped by patient address cluster</p>
+        <div id="areaHeat" style="margin-top:.4rem"></div>
+      </div>
+    </section>
+
+    <!-- ============ AI BUSINESS INSIGHTS ============ -->
+    <section class="card ai-glow" style="margin-top:1.3rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;margin-bottom:.8rem">
+        <h3 style="margin:0">✦ Vanaja AI · Business Insights</h3>
+        <button class="btn btn-maroon btn-sm" onclick="refreshInsights()">↻ Refresh analysis</button>
+      </div>
+      <div class="grid grid-3" id="insightGrid"></div>
+      <p style="font-size:.74rem;color:var(--ink-faint);margin-top:.8rem">Insights are generated from configured
+      business rules over anonymised operational data. They are decision-support observations, not guarantees.</p>
+    </section>
+
+    <!-- Campaign health -->
+    <section class="card" style="margin-top:1.3rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem">
+        <h3 style="margin:0">🏷️ "Save up to N%" campaign truth-check</h3>
+        <a class="btn btn-maroon btn-sm" href="offers.html">Configure campaign →</a>
+      </div>
+      <p id="campaignTruth" style="font-size:.92rem;margin-top:.6rem"></p>
+    </section>
+
+    <p class="disclaimer" style="margin-top:1.4rem">All patient data access in this console is role-restricted and audit-logged.
+    AI-generated insights are informational only and do not replace qualified medical or business judgement.</p>
+  </main>
+</div>
+<script src="../assets/js/app.js"></script>
+<script>
+applyPrefs();
+document.getElementById('hdrDate').textContent=new Date().toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · All branches';
+
+/* ================= KPIs (live overview) ================= */
+function spark(vals){
+  const mx=Math.max(...vals);
+  return `<div class="spark">${vals.map(v=>`<i style="height:${Math.round(v/mx*100)}%"></i>`).join('')}</div>`;
+}
+const KPIS=[
+ {l:"Today's bookings",v:'82',d:'+12% vs yesterday',up:true, s:[41,48,52,49,58,63,71,82]},
+ {l:"Home collections",v:'18',d:'12 completed',up:true, s:[8,11,9,14,12,16,15,18]},
+ {l:'Samples collected',v:'96',d:'on target',up:true, s:[60,72,68,80,84,88,91,96]},
+ {l:"Today's revenue",v:'₹86,400',d:'+9% vs yesterday',up:true, s:[42,51,47,55,61,70,79,86]},
+];
+const KPIS2=[
+ {l:'Pending reports',v:'6',d:'SLA 4h · 2 urgent',warn:true},
+ {l:'Completed reports',v:'118',d:'this week',up:true},
+ {l:'Active patients',v:'12,480',d:'+214 this month',up:true},
+ {l:'Avg turnaround',v:'5.2 h',d:'-22 min vs last week',up:true},
+];
+document.getElementById('kpiRow').innerHTML=KPIS.map(k=>`
+  <div class="card kpi card-hover"><small>${k.l}</small><b>${k.v}</b>
+    <span class="delta ${k.warn?'down':'up'}">${k.d}</span>${spark(k.s)}</div>`).join('');
+document.getElementById('kpiRow2').innerHTML=KPIS2.map(k=>`
+  <div class="card kpi card-hover"><small>${k.l}</small><b>${k.v}</b>
+    <span class="delta ${k.up?'up':'down'}">${k.d}</span></div>`).join('');
+
+/* ================= AREA DEMAND HEATMAP ================= */
+const AREAS=[['Kavadiguda',34],['Hasmathpet',27],['Bowenpally',21],['Tarnaka',14],['Padmashali Colony',11],['Sainikpuri',7]];
+const mx=AREAS[0][1];
+document.getElementById('areaHeat').innerHTML=AREAS.map(([a,n])=>`
+  <div class="area-row"><span style="width:130px;font-weight:700">${a}</span>
+    <span class="area-bar" style="width:${Math.round(n/mx*100)*0.52}%;opacity:${.45+.55*(n/mx)}"></span>
+    <b style="margin-left:auto">${n}</b></div>`).join('');
+
+/* ================= AI BUSINESS INSIGHTS ================= */
+const INSIGHTS=[
+ {icon:'🧪',tag:'Demand',
+  t:'“CBC is the most booked test this month.”',
+  p:'51 CBC bookings in the last 7 days — ahead of Full Body Checkup (34). CBC pairs frequently with HbA1c; consider a bundled “CBC + HbA1c” offer to lift basket value.',
+  acts:[['Create bundle','offers.html','btn-maroon btn-sm'],['View tests','../tests.html','btn-ghost btn-sm']]},
+ {icon:'🏠',tag:'Operations',
+  t:'“Home collection demand is highest in these areas.”',
+  p:'Kavadiguda and Hasmathpet account for ~44% of home-collection requests. Scheduling an extra collector slot in these clusters between 7–9 AM could cut average wait time.',
+  acts:[['Optimise routes','phlebo.html','btn-maroon btn-sm']]},
+ {icon:'🔔',tag:'Retention',
+  t:'“These patients may be due for a follow-up based on configured reminder rules.”',
+  p:'218 patients match reminder rules: HbA1c > 3 months (94), annual checkup overdue (81), Vitamin D recheck due (43). Reminder queue is ready — sending is consent-filtered.',
+  acts:[['Review queue','reminders.html','btn-ghost btn-sm'],
+        ['Send now','#','btn-maroon btn-sm']]},
+ {icon:'📈',tag:'Revenue',
+  t:'Revenue per booking rose 9% week-on-week.',
+  p:'Driven mainly by package attach-rate growth after the truth-checked campaign banner went live. No artificial discounts involved — savings remain computed from real prices.',
+  acts:[['Campaign settings','offers.html','btn-ghost btn-sm']]},
+];
+let pool=[...INSIGHTS];
+function renderInsights(){
+  document.getElementById('insightGrid').innerHTML=pool.slice(0,3).map(x=>`
+    <div class="ai-insight">
+      <span class="conf-tag">${x.icon} ${x.tag}</span>
+      <b class="t">${x.t}</b>
+      <p>${x.p}</p>
+      <div class="act">${x.acts.map(([l,h,c])=>h==='#'
+        ?`<button class="btn ${c}" onclick="toast('Reminder batch queued — consent filter applied')">${l}</button>`
+        :`<a class="btn ${c}" href="${h}">${l}</a>`).join('')}</div>
+    </div>`).join('');
+}
+function refreshInsights(){
+  pool.push(pool.shift());
+  renderInsights();
+  toast('AI re-analysed operational data ✓');
+}
+renderInsights();
+
+/* ================= CAMPAIGN TRUTH-CHECK ================= */
+(function(){
+  const promo=campaignHeadline(), el=document.getElementById('campaignTruth');
+  el.innerHTML = promo
+   ? `✅ Campaign is <b>live and truthful</b>: the strongest active offer is <b>${promo.percent}% off</b>,
+      so the public banner reads “<b>SAVE UP TO ${promo.line}% with Vanaja Diagnostic Centre</b>”.
+      If no offer supports it, the banner auto-hides — the claim can never exceed reality.`
+   : '⚠️ No active offers — promotional banner is currently hidden everywhere.';
+})();
+</script>
+</body>
+</html>

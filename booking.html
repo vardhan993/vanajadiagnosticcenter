@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Test — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+.steps { display:flex; gap:.4rem; margin:1.2rem 0 .6rem; flex-wrap:wrap; }
+.step-pill { flex:1; min-width:110px; text-align:center; font-size:.76rem; font-weight:800; padding:.55rem .4rem;
+  border-radius:var(--r-full); background:var(--surface-2); color:var(--ink-faint); border:1px solid var(--border); }
+.step-pill.active { background:var(--grad-primary); color:#fff; border-color:transparent; box-shadow:var(--glow-navy); }
+.step-pill.done { color:#1E9E6A; border-color:#1E9E6A; }
+
+/* Step 1 mode cards */
+.mode-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:.7rem; margin-top:.9rem; }
+.mode-card { cursor:pointer; border:2px solid var(--border); border-radius:var(--r-lg); padding:1.1rem .8rem;
+  background:var(--surface); text-align:center; font-weight:700; font-size:.9rem; transition:all var(--t-fast); }
+.mode-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-2); }
+.mode-card.sel { border-color:var(--maroon-600); background:var(--maroon-50);
+  box-shadow:0 0 0 4px rgba(139,46,95,.12); }
+[data-theme="dark"] .mode-card.sel { background:rgba(139,46,95,.18); }
+.mode-card .m-icon { font-size:1.7rem; display:block; margin-bottom:.4rem; }
+.mode-card small { display:block; color:var(--ink-faint); font-weight:500; margin-top:.2rem; }
+
+/* Step 2 search */
+.search-hero { position:relative; }
+.search-hero .input { font-size:1.05rem; padding:1rem 1.1rem 1rem 2.7rem; }
+.search-hero::before { content:"🔍"; position:absolute; left:.85rem; top:50%; transform:translateY(-50%);
+  font-size:1.1rem; opacity:.6; pointer-events:none; }
+.ex-chips { display:flex; gap:.45rem; flex-wrap:wrap; margin-top:.7rem; }
+.ex-chip { cursor:pointer; border:1.5px solid var(--navy-200); background:var(--navy-50); color:var(--navy-700);
+  border-radius:var(--r-full); padding:.35rem .85rem; font-size:.82rem; font-weight:700; }
+[data-theme="dark"] .ex-chip { background:rgba(21,92,153,.2); color:var(--navy-300); border-color:var(--navy-600); }
+.intent-note { margin:.8rem 0 0; padding:.7rem 1rem; background:linear-gradient(135deg,rgba(107,27,71,.08),rgba(0,51,102,.06));
+  border-left:3px solid var(--maroon-600); border-radius:var(--r-md); font-size:.88rem; }
+.sr-item { display:flex; justify-content:space-between; align-items:center; gap:.6rem;
+  border:1.5px solid var(--border); border-radius:var(--r-lg); padding:.75rem .95rem; background:var(--surface); }
+.sr-item.picked { border-color:#1E9E6A; background:rgba(30,158,106,.06); }
+
+/* Step 3 */
+.member-chip { cursor:pointer; border:2px solid var(--border); border-radius:var(--r-full);
+  padding:.45rem .95rem; font-weight:700; font-size:.88rem; background:var(--surface); }
+.member-chip.sel { border-color:var(--maroon-600); color:var(--maroon-600); background:var(--maroon-50); }
+.slot { cursor:pointer; border:1.5px solid var(--border); border-radius:var(--r-md); padding:.5rem .8rem;
+  font-weight:700; font-size:.85rem; background:var(--surface); }
+.slot.sel { border-color:var(--navy-500); color:var(--navy-700); background:var(--navy-50); box-shadow:0 0 0 3px var(--navy-100); }
+.loc-opt { cursor:pointer; border:1.5px solid var(--border); border-radius:var(--r-lg); padding:.8rem 1rem;
+  background:var(--surface); font-size:.9rem; }
+.loc-opt.sel { border-color:var(--maroon-600); background:var(--maroon-50); }
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="eyebrow">Smart Booking</div>
+  <h1>Book in under a minute</h1>
+
+  <div class="steps" aria-hidden="true">
+    <div class="step-pill active" data-s="1">1 · Choose</div>
+    <div class="step-pill" data-s="2">2 · Find tests</div>
+    <div class="step-pill" data-s="3">3 · When & where</div>
+    <div class="step-pill" data-s="4">4 · Pay & confirm</div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progFill" style="width:25%"></div></div>
+
+  <!-- ============ STEP 1: CHOOSE ============ -->
+  <section class="card" id="step1" style="margin-top:1.2rem">
+    <h3>What would you like to do?</h3>
+    <div class="mode-grid" id="modeGrid">
+      <button type="button" class="mode-card" data-mode="test"><span class="m-icon">🧪</span>Book a Test<small>Single lab test</small></button>
+      <button type="button" class="mode-card" data-mode="package"><span class="m-icon">📦</span>Health Package<small>Bundled checkups</small></button>
+      <button type="button" class="mode-card" data-mode="home"><span class="m-icon">🏠</span>Home Collection<small>Free doorstep pickup</small></button>
+      <button type="button" class="mode-card" data-mode="lab"><span class="m-icon">🏥</span>Lab Visit<small>Walk-in to a centre</small></button>
+    </div>
+  </section>
+
+  <!-- ============ STEP 2: AI SEARCH ============ -->
+  <section class="card" id="step2" style="margin-top:1.2rem;display:none">
+    <h3>Type what you want to check</h3>
+    <p style="color:var(--ink-muted);font-size:.88rem;margin:.2rem 0 .9rem">Vanaja AI understands everyday words — not just test names.</p>
+    <form class="search-hero" onsubmit="return runSearch(event)">
+      <input class="input" id="qInput" placeholder='Type what you want to check… e.g. "sugar", "hair fall"' autocomplete="off" aria-label="Search tests">
+    </form>
+    <div class="ex-chips" id="exChips">
+      <button type="button" class="ex-chip" onclick="quick('Sugar')">Sugar</button>
+      <button type="button" class="ex-chip" onclick="quick('Thyroid')">Thyroid</button>
+      <button type="button" class="ex-chip" onclick="quick('Full body')">Full body</button>
+      <button type="button" class="ex-chip" onclick="quick('Hair fall')">Hair fall</button>
+      <button type="button" class="ex-chip" onclick="quick('Vitamin deficiency')">Vitamin deficiency</button>
+      <button type="button" class="ex-chip" onclick="quick('Tired all the time')">Tired all the time</button>
+    </div>
+    <div id="intentNote"></div>
+    <div class="grid grid-2" id="results" style="margin-top:.9rem"></div>
+    <details style="margin-top:1rem">
+      <summary style="cursor:pointer;font-weight:800">Browse full catalogue instead</summary>
+      <div class="grid grid-2" id="fullList" style="margin-top:.8rem"></div>
+    </details>
+    <div class="card" style="background:var(--surface-2);margin-top:1rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+      <b id="cartCountTxt">No tests selected yet</b>
+      <a class="btn btn-ghost btn-sm" href="recommender.html">🎯 Not sure? Take the quiz</a>
+    </div>
+  </section>
+
+  <!-- ============ STEP 3: WHEN & WHERE ============ -->
+  <section class="card" id="step3" style="margin-top:1.2rem;display:none">
+    <h3>Patient, date, time & location</h3>
+
+    <label class="q-label" style="display:block;font-weight:800;margin:.8rem 0 .45rem">Patient</label>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap" id="memberRow">
+      <button type="button" class="member-chip sel" onclick="pickMember(this,'Self')">Self (Srinivas M.)</button>
+      <button type="button" class="member-chip" onclick="pickMember(this,'Father')">Father</button>
+      <button type="button" class="member-chip" onclick="pickMember(this,'Mother')">Mother</button>
+      <button type="button" class="member-chip" onclick="pickMember(this,'Spouse')">Spouse</button>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:1rem">
+      <div class="field"><label for="bdate">Date</label><input class="input" type="date" id="bdate"></div>
+      <div class="field"><label>Time slot</label>
+        <div style="display:flex;gap:.45rem;flex-wrap:wrap" id="slotRow">
+          <button type="button" class="slot sel" onclick="pickSlot(this)">7–8 AM</button>
+          <button type="button" class="slot" onclick="pickSlot(this)">8–9 AM</button>
+          <button type="button" class="slot" onclick="pickSlot(this)">9–10 AM</button>
+          <button type="button" class="slot" onclick="pickSlot(this)">10–12 PM</button>
+          <button type="button" class="slot" onclick="pickSlot(this)">4–6 PM</button>
+        </div>
+      </div>
+    </div>
+
+    <label class="q-label" style="display:block;font-weight:800;margin:1rem 0 .45rem">Location</label>
+    <div class="grid grid-2" id="locRow">
+      <label class="loc-opt sel"><input type="radio" name="loc" value="home" checked onchange="pickLoc(this)">
+        <b>🏠 Home collection</b><br><small style="color:var(--ink-muted)">Free phlebotomist visit — enter address below</small></label>
+      <label class="loc-opt"><input type="radio" name="loc" value="kavadiguda" onchange="pickLoc(this)">
+        <b>🏥 Kavadiguda (Main)</b><br><small style="color:var(--ink-muted)">Kavadiguda Main Rd, Secunderabad – 500003</small></label>
+      <label class="loc-opt"><input type="radio" name="loc" value="hasmathpet" onchange="pickLoc(this)">
+        <b>🏥 Hasmathpet</b><br><small style="color:var(--ink-muted)">Opp. Jamia Masjid, Bowenpally – 500009</small></label>
+      <label class="loc-opt"><input type="radio" name="loc" value="padmashali" onchange="pickLoc(this)">
+        <b>🏥 Padmashali Colony</b><br><small style="color:var(--ink-muted)">Secunderabad</small></label>
+    </div>
+    <div class="field" style="margin-top:.9rem" id="addrField">
+      <label for="baddr">Collection address</label>
+      <input class="input" id="baddr" value="Flat 302, Sai Enclave, Kavadiguda, Secunderabad – 500003">
+    </div>
+    <label style="display:flex;gap:.5rem;align-items:center;font-size:.9rem;color:var(--ink-muted);margin-top:.6rem">
+      <input type="checkbox" checked id="consentChk"> I confirm consent for sample collection and digital report.
+    </label>
+  </section>
+
+  <!-- ============ STEP 4: PAY & CONFIRM ============ -->
+  <section class="card" id="step4" style="margin-top:1.2rem;display:none">
+    <h3>Review & pay</h3>
+    <div id="summaryBox" style="font-size:.93rem;line-height:1.9;background:var(--surface-2);border-radius:var(--r-md);padding:.9rem 1.1rem;margin-bottom:.9rem"></div>
+    <div id="billLines"></div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:.8rem 0">
+    <div style="display:flex;justify-content:space-between;font-weight:800;font-size:1.15rem">
+      <span>Total payable</span><span class="price" id="grandTotal"></span>
+    </div>
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0">
+      <button type="button" class="slot sel pay-opt" onclick="pickPay(this,'upi')">UPI / QR</button>
+      <button type="button" class="slot pay-opt" onclick="pickPay(this,'card')">Card</button>
+      <button type="button" class="slot pay-opt" onclick="pickPay(this,'cash')">Pay at visit</button>
+    </div>
+    <p style="font-size:.8rem;color:var(--ink-faint)">Demo mode — no live payment is processed.</p>
+    <button class="btn btn-primary btn-lg btn-glow" id="payBtn" style="width:100%" onclick="confirmBooking()">✓ Confirm & Pay</button>
+  </section>
+
+  <!-- nav -->
+  <div style="display:flex;gap:.7rem;margin-top:1.4rem">
+    <button class="btn btn-ghost" id="backBtn" onclick="navStep(-1)" disabled>← Back</button>
+    <button class="btn btn-primary btn-lg" id="nextBtn" onclick="navStep(1)">Continue →</button>
+  </div>
+
+  <p class="disclaimer" style="margin-top:1rem">AI-generated suggestions are informational and do not replace advice
+  from a qualified healthcare professional.</p>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Book');
+
+/* ================= STATE ================= */
+let step=1, mode=null, pickedMember='Self', payMethod='upi';
+const cart = JSON.parse(sessionStorage.getItem('vd_cart') || '[]');
+function saveCart(){ sessionStorage.setItem('vd_cart', JSON.stringify(cart)); }
+
+/* seed from URL (?package= / ?test=) or recommender hand-off */
+(function seed(){
+  const p=new URLSearchParams(location.search);
+  const pkg=p.get('package'), tst=p.get('test');
+  if(pkg && !cart.some(c=>c.id===pkg)) cart.push({id:pkg,type:'package'});
+  if(tst && !cart.some(c=>c.id===tst)) cart.push({id:tst,type:'test'});
+  if(!cart.length){
+    const recs=JSON.parse(sessionStorage.getItem('vd_recs')||'[]');
+    recs.forEach(r=>{ if(!cart.some(c=>c.id===r.id)) cart.push(r); });
+  }
+  saveCart();
+})();
+
+/* ================= STEP 1 ================= */
+document.getElementById('modeGrid').addEventListener('click', e=>{
+  const b=e.target.closest('.mode-card'); if(!b) return;
+  document.querySelectorAll('.mode-card').forEach(c=>c.classList.remove('sel'));
+  b.classList.add('sel'); mode=b.dataset.mode;
+  /* lab/home preselect location on step 3 */
+  if(mode==='lab'){ const r=document.querySelector('input[name="loc"][value="kavadiguda"]'); r.checked=true; pickLoc(r); }
+  if(mode==='home'){ const r=document.querySelector('input[name="loc"][value="home"]'); r.checked=true; pickLoc(r); }
+});
+
+/* ================= STEP 2: AI SEARCH ================= */
+const EXAMPLES=['Sugar','Thyroid','Full body','Hair fall','Vitamin deficiency'];
+function quick(t){ document.getElementById('qInput').value=t; runSearch(new Event('x')); return false; }
+function runSearch(e){
+  e?.preventDefault?.();
+  const q=document.getElementById('qInput').value;
+  const r=smartSearch(q);
+  document.getElementById('intentNote').innerHTML =
+    r.note?`<div class="intent-note">💡 ${r.note}:</div>`:'';
+  const offers=loadOffers();
+  document.getElementById('results').innerHTML =
+    [...r.packages.map(p=>({kind:'package',id:p.id,name:p.name,sub:`Package · ${p.testsCount} tests`,price:p.currentPrice,orig:p.originalPrice})),
+     ...r.tests.map(t=>{const o=offers.find(x=>x.ref===t.id&&x.active);return {kind:'test',id:t.id,name:t.name,sub:t.cat+' · Test',price:o&&o.currentPrice<t.price?o.currentPrice:t.price,orig:o&&o.currentPrice<t.price?o.originalPrice:null};})]
+    .map(x=>`
+    <div class="sr-item ${cart.some(c=>c.id===x.id)?'picked':''}" id="sr-${x.id}">
+      <div><b>${x.name}</b><br><small style="color:var(--ink-muted)">${x.sub}</small></div>
+      <div style="text-align:right;flex:none">
+        <span class="price">${fmtINR(x.price)}</span>${x.orig?`<span class="price-strike">${fmtINR(x.orig)}</span>`:''}<br>
+        <button class="btn btn-maroon btn-sm" onclick="toggleItem('${x.id}','${x.kind}',this)">${cart.some(c=>c.id===x.id)?'✓ Added':'Add +'}</button>
+      </div>
+    </div>`).join('') || '<p style="color:var(--ink-muted)">Nothing matched — try another word, or browse the catalogue below.</p>';
+  updateCartTxt();
+  return false;
+}
+/* full catalogue browse list */
+(function(){
+  const offers=loadOffers();
+  document.getElementById('fullList').innerHTML=
+    [...PACKAGES.map(p=>({kind:'package',id:p.id,name:p.name,price:p.currentPrice})),
+     ...TESTS.map(t=>({kind:'test',id:t.id,name:t.name,price:t.price}))].map(x=>
+    `<div class="sr-item"><div><b>${x.name}</b></div>
+     <button class="btn btn-maroon btn-sm" onclick="toggleItem('${x.id}','${x.kind}',this)">${cart.some(c=>c.id===x.id)?'✓':'Add +'}</button></div>`).join('');
+})();
+function toggleItem(id,type,btn){
+  const i=cart.findIndex(c=>c.id===id);
+  if(i>=0){ cart.splice(i,1); } else { cart.push({id,type}); }
+  saveCart();
+  btn.textContent = i>=0 ? 'Add +' : '✓ Added';
+  btn.closest('.sr-item')?.classList.toggle('picked', i<0);
+  updateCartTxt(); renderFullBtn(id,i<0);
+}
+function renderFullBtn(id,on){
+  document.querySelectorAll(`#fullList .sr-item`).forEach(el=>{
+    const b=el.querySelector('button'); if(!b||!el.outerHTML.includes(`'${id}'`))return;
+    b.textContent=on?'✓':'Add +';
+  });
+}
+function updateCartTxt(){
+  const n=cart.length;
+  document.getElementById('cartCountTxt').textContent =
+    n?`${n} item${n>1?'s':''} selected`: 'No tests selected yet';
+}
+
+/* ================= STEP 3 ================= */
+function pickMember(el,m){ document.querySelectorAll('#memberRow .member-chip').forEach(c=>c.classList.remove('sel')); el.classList.add('sel'); pickedMember=m; }
+function pickSlot(el){ document.querySelectorAll('#slotRow .slot').forEach(s=>s.classList.remove('sel')); el.classList.add('sel'); }
+function pickLoc(r){ document.querySelectorAll('#locRow .loc-opt').forEach(l=>l.classList.remove('sel')); r.closest('.loc-opt').classList.add('sel'); document.getElementById('addrField').style.display=r.value==='home'?'block':'none'; }
+function pickPay(el,m){ document.querySelectorAll('.pay-opt').forEach(s=>s.classList.remove('sel')); el.classList.add('sel'); payMethod=m; }
+
+/* ================= LINE ITEMS / BILL ================= */
+function lineItems(){
+  return cart.map(c=>{
+    if(c.type==='package'){ const p=PACKAGES.find(x=>x.id===c.id); return p&&{name:p.name,sub:`Package · ${p.testsCount} tests`,price:p.currentPrice,orig:p.originalPrice}; }
+    const t=TESTS.find(x=>x.id===c.id); return t&&{name:t.name,sub:t.cat+' · Test',price:t.price??600};
+  }).filter(Boolean);
+}
+const total=()=>lineItems().reduce((s,i)=>s+i.price,0);
+
+/* ================= WIZARD NAV ================= */
+function navStep(dir){
+  if(dir===1 && !validate()) return;
+  step=Math.min(4,Math.max(1,step+dir));
+  ['step1','step2','step3','step4'].forEach((id,i)=>document.getElementById(id).style.display=i===step-1?'block':'none');
+  document.querySelectorAll('.step-pill').forEach((w,i)=>{ w.classList.toggle('active',i===step-1); w.classList.toggle('done',i<step-1); });
+  document.getElementById('progFill').style.width=(step*25)+'%';
+  document.getElementById('backBtn').disabled=step===1;
+  const nb=document.getElementById('nextBtn');
+  if(step===4){ nb.style.display='none'; renderBill(); }
+  else { nb.style.display='inline-flex'; nb.textContent= step===3?'Review & Pay →':(step===1?'Find my tests →':'Choose time →'); }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function validate(){
+  if(step===1 && !mode){ toast('Pick one to get started 🙂'); return false; }
+  if(step===2 && !cart.length){ toast('Add at least one test or package'); return false; }
+  if(step===3 && !document.getElementById('consentChk').checked){ toast('Please confirm consent to continue'); return false; }
+  return true;
+}
+function renderBill(){
+  const loc=document.querySelector('input[name="loc"]:checked').value;
+  const slot=document.querySelector('#slotRow .slot.sel')?.textContent;
+  const date=document.getElementById('bdate').value;
+  document.getElementById('summaryBox').innerHTML=
+    `<b>${lineItems().length} item(s)</b> for <b>${pickedMember}</b> · ${date||'date pending'} at ${slot||''}<br>`+
+    `<small style="color:var(--ink-muted)">${loc==='home'?'🏠 Home collection — '+document.getElementById('baddr').value:'🏥 '+document.querySelector('input[name="loc"]:checked').closest('.loc-opt').querySelector('b').textContent}</small>`;
+  const saved=lineItems().reduce((s,i)=>s+(i.orig?i.orig-i.price:0),0);
+  document.getElementById('billLines').innerHTML=
+    lineItems().map(i=>`<div style="display:flex;justify-content:space-between;padding:.15rem 0"><span>${i.name}</span><b>${fmtINR(i.price)}</b></div>`).join('')
+    +(saved?`<div style="display:flex;justify-content:space-between;color:#1E9E6A"><span>You save</span><b>− ${fmtINR(saved)}</b></div>`:'');
+  document.getElementById('grandTotal').textContent=fmtINR(total());
+}
+function confirmBooking(){
+  const b={ id:'VDC'+Date.now().toString().slice(-8), member:pickedMember, mode,
+    loc:document.querySelector('input[name="loc"]:checked').value,
+    addr:document.getElementById('baddr').value,
+    slot:document.querySelector('#slotRow .slot.sel')?.textContent,
+    date:document.getElementById('bdate').value,
+    items:lineItems(), total:total(), pay:payMethod };
+  localStorage.setItem('vd_last_booking', JSON.stringify(b));
+  sessionStorage.removeItem('vd_cart'); sessionStorage.removeItem('vd_recs');
+  location.href='track.html?id='+b.id;
+}
+
+/* init */
+document.getElementById('bdate').value=new Date(Date.now()+864e5).toISOString().slice(0,10);
+updateCartTxt();
+if(cart.length){ /* jump straight to search results view with seeded items */ setTimeout(()=>runSearch(new Event('x')),50); }
+navStep(0);
+</script>
+</body>
+</html>

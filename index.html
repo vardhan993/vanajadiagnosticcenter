@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#003366">
+<title>Vanaja Diagnostic Centre — The Future of Diagnostics</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+/* ================= ICON SYSTEM (self-contained, cannot fail) ================= */
+.ic { width:24px; height:24px; flex:none; display:block; }
+.ic path, .ic circle, .ic rect, .ic line, .ic polyline {
+  stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;
+}
+/* Lighten icons on the dark hero so outline icons stay visible */
+.hero .ic path, .hero .ic circle, .hero .ic rect, .hero .ic line, .hero .ic polyline {
+  stroke:rgba(255,255,255,.85);
+}
+/* Slightly lighter icons in dark mode throughout */
+[data-theme="dark"] .ic path, [data-theme="dark"] .ic circle, [data-theme="dark"] .ic rect, [data-theme="dark"] .ic line, [data-theme="dark"] .ic polyline {
+  stroke:rgba(255,255,255,.8);
+}
+
+/* ================= HERO ================= */
+.hero {
+  position:relative; isolation:isolate; overflow:hidden;
+  border-radius:var(--r-xl); margin:1rem auto;
+  min-height:max(600px, calc(100svh - 150px));
+  max-width:100%;
+}
+.hero-inner {
+  position:relative; z-index:3;
+  display:grid; gap:2rem; grid-template-columns:1.05fr .95fr; align-items:center;
+  padding:clamp(1.6rem,4vw,3.4rem); width:100%;
+}
+@media (max-width:940px){ .hero-inner{ grid-template-columns:1fr; } .hero{ min-height:0; } }
+
+.hero-bg-base { position:absolute; inset:0; z-index:0; background:var(--grad-deep); }
+.orb { position:absolute; border-radius:50%; filter:blur(80px); opacity:.55; z-index:0; pointer-events:none; will-change:transform; }
+.orb-a { width:480px;height:480px; background:#155C99; top:-160px; left:-120px; animation:driftA 16s ease-in-out infinite alternate; }
+.orb-b { width:420px;height:420px; background:#8B2E5F; bottom:-180px; right:-110px; animation:driftB 19s ease-in-out infinite alternate; }
+.orb-c { width:260px;height:260px; background:#003366; top:35%; left:45%; opacity:.4; animation:driftC 23s ease-in-out infinite alternate; }
+@keyframes driftA { from{transform:translate(0,0) scale(1);} to{transform:translate(90px,60px) scale(1.15);} }
+@keyframes driftB { from{transform:translate(0,0) scale(1.05);} to{transform:translate(-80px,-50px) scale(.92);} }
+@keyframes driftC { from{transform:translate(-40px,20px);} to{transform:translate(50px,-40px);} }
+
+#neural { position:absolute; inset:0; z-index:1; width:100%; height:100%; pointer-events:none; opacity:.8; }
+.hero-grid-tex {
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background-image:linear-gradient(rgba(127,168,204,.07) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(127,168,204,.07) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse at center,#000 30%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse at center,#000 30%,transparent 78%);
+}
+.hero-scan { position:absolute; left:0; right:0; height:140px; z-index:2; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(192,122,160,.10),transparent); animation:scanY 7s linear infinite; }
+@keyframes scanY { from{top:-20%;} to{top:110%;} }
+
+.ai-core { position:absolute; z-index:2; pointer-events:none; width:420px;height:420px; border-radius:50%;
+  left:-60px; top:-80px; opacity:.5;
+  background:radial-gradient(circle at center, rgba(192,122,160,.28) 0%, transparent 42%),
+             conic-gradient(from 0deg, rgba(21,92,153,0), rgba(21,92,153,.30), rgba(139,46,95,.25), rgba(21,92,153,0) 75%);
+  -webkit-mask:radial-gradient(circle, transparent 52%, #000 56%, #000 68%, transparent 72%);
+          mask:radial-gradient(circle, transparent 52%, #000 56%, #000 68%, transparent 72%);
+  animation:coreSpin 14s linear infinite; }
+@keyframes coreSpin { to { rotate:360deg; } }
+
+.hero h1 { color:#fff; font-size:clamp(2rem,4.4vw,3.2rem); font-weight:800; letter-spacing:-.01em; margin-bottom:.5rem; }
+.grad-text { background:linear-gradient(92deg,#FFF 10%,#C9A0BC 55%,#7FA8CC 90%); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.hero p.lead { color:#C6D8E8; font-size:1.05rem; max-width:33rem; }
+
+/* entrance choreography */
+@keyframes heroIn { from{opacity:0; transform:translateY(34px) scale(.985); filter:blur(6px);} to{opacity:1; transform:none; filter:blur(0);} }
+.hero h1,.hero p.lead,.promo-card,.hero-cta,.viz-wrap { animation:heroIn .9s var(--ease) backwards; }
+.hero h1{animation-delay:.05s}.hero p.lead{animation-delay:.22s}.promo-card{animation-delay:.40s}
+.hero-cta{animation-delay:.55s}.viz-wrap{animation-delay:.35s}
+
+.promo-card { margin-top:1.3rem; position:relative; overflow:hidden;
+  background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.04));
+  border:1px solid rgba(255,255,255,.22); border-radius:var(--r-xl);
+  padding:1.15rem 1.3rem; backdrop-filter:blur(12px); }
+.promo-card::before { content:""; position:absolute; top:0; bottom:0; width:60%; left:-80%;
+  transform:skewX(-18deg); background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);
+  animation:shine 5.5s ease-in-out infinite; }
+@keyframes shine { 0%,60%{left:-80%;} 90%,100%{left:130%;} }
+.promo-num { font-size:clamp(2rem,4vw,2.6rem); font-weight:800; letter-spacing:-.02em;
+  background:linear-gradient(90deg,#fff,#E9C6DA); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.promo-copy { font-size:.85rem; color:#D9E6F2; }
+.btn-glow { position:relative; overflow:hidden; }
+.btn-glow::after { content:""; position:absolute; inset:0;
+  background:radial-gradient(circle at 50% 120%, rgba(255,255,255,.35), transparent 60%); opacity:0; transition:opacity .3s; }
+.btn-glow:hover::after { opacity:1; }
+
+/* viz card + spinning ring */
+.viz-wrap { perspective:900px; position:relative; }
+.viz-wrap::before { content:""; position:absolute; inset:-14px; border-radius:calc(var(--r-xl) + 14px);
+  background:conic-gradient(from var(--ringA,0deg), rgba(21,92,153,0), rgba(127,168,204,.65), rgba(192,122,160,.65), rgba(21,92,153,0) 60%);
+  z-index:0; opacity:.8; filter:blur(2px); animation:ringSpin 6s linear infinite; }
+@property --ringA { syntax:'<angle>'; initial-value:0deg; inherits:false; }
+@keyframes ringSpin { to { --ringA:360deg; } }
+.viz { position:relative; z-index:1; border-radius:var(--r-xl); padding:1.2rem;
+  background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.20);
+  backdrop-filter:blur(14px); box-shadow:var(--shadow-3), inset 0 1px 0 rgba(255,255,255,.15);
+  transition:box-shadow .25s; transform-style:preserve-3d; animation:floatY 7s ease-in-out infinite; }
+@keyframes floatY { 0%,100%{translate:0 0;} 50%{translate:0 -10px;} }
+.viz-head { display:flex; justify-content:space-between; align-items:center; color:#CFE0EF; font-size:.78rem; font-weight:700; margin-bottom:.8rem; }
+.stat-pill { background:rgba(255,255,255,.12); border-radius:var(--r-full); padding:.25rem .7rem; font-size:.72rem; font-weight:700; }
+.ecg { stroke:url(#ecgGrad); fill:none; stroke-width:2.2; stroke-linecap:round; }
+.ecg-anim { stroke-dasharray:320; animation:dash 3.2s linear infinite; }
+@keyframes dash { to { stroke-dashoffset:-640; } }
+.mini-stat { background:rgba(255,255,255,.09); border-radius:var(--r-md); padding:.7rem; }
+.mini-stat .lbl { font-size:.68rem;color:#B9CFE3;font-weight:700; }
+.mini-stat .val { font-size:1.2rem;font-weight:800;color:#fff; }
+
+/* ================= ICON QUICK ACTIONS ================= */
+.qa-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:1.1rem; }
+.qa { display:flex; flex-direction:column; gap:.6rem; align-items:flex-start; text-decoration:none;
+  border-radius:var(--r-lg); padding:1.2rem; position:relative; overflow:hidden; }
+.qa:hover { transform:translateY(-5px); box-shadow:var(--glow-navy); }
+.qa-icon {
+  width:52px; height:52px; border-radius:16px; display:grid; place-items:center;
+  background:linear-gradient(135deg,#0A4D8F,#1A6FB5); box-shadow:0 6px 18px rgba(10,77,143,.35); flex:none;
+  transition:transform var(--t-med) var(--ease);
+}
+.qa.maroon .qa-icon { background:linear-gradient(135deg,#8B2E5F,#B85A88); box-shadow:0 6px 18px rgba(139,46,95,.35); }
+.qa-icon .ic path, .qa-icon .ic circle, .qa-icon .ic rect, .qa-icon .ic line, .qa-icon .ic polyline {
+  stroke:#fff !important; stroke-width:2.1;
+}
+.qa:hover .qa-icon { transform:scale(1.12) rotate(-6deg); }
+.qa b { font-size:.98rem; color:var(--ink); }
+.qa span { font-size:.8rem; color:var(--ink-muted); }
+
+/* section headings */
+.section-head h2 { position:relative; padding-bottom:.45rem; }
+.section-head h2::after { content:""; position:absolute; left:0; bottom:0; height:3.5px; width:56px;
+  border-radius:3px; background:var(--grad-accent); }
+
+/* package/test cards */
+.pkg-topline { display:flex; justify-content:space-between; align-items:center; }
+.includes { list-style:none; padding:0; margin:.7rem 0; font-size:.87rem; color:var(--ink-muted); line-height:1.9; }
+.includes li::before { content:"✓"; color:#1E9E6A; font-weight:800; margin-right:.5rem; }
+
+/* scroll reveal */
+.reveal { opacity:0; transform:translateY(26px); transition:opacity .7s var(--ease), transform .7s var(--ease); transition-delay:var(--d,0s); }
+.reveal.revealed { opacity:1; transform:none; }
+
+.trust-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); text-align:center; gap:1rem; }
+.trust-item b { display:block; font-size:1.65rem; color:var(--navy-700); font-variant-numeric:tabular-nums; }
+[data-theme="dark"] .trust-item b { color:var(--navy-300); }
+
+.searchbar { display:flex; gap:.6rem; max-width:44rem; }
+.hero-search { position:relative; align-items:center; background:var(--surface); border:1.5px solid var(--border); border-radius:999px; padding:.35rem .45rem .35rem 1rem; box-shadow:0 8px 28px rgba(0,42,85,.10); transition:box-shadow .25s,border-color .25s; }
+.hero-search:focus-within { border-color:var(--maroon-500); box-shadow:0 8px 32px rgba(139,46,95,.18), 0 0 0 4px var(--maroon-100); }
+.hero-search .input { border:none !important; background:transparent !important; box-shadow:none !important; flex:1; font-size:.98rem; padding:.55rem .4rem; }
+.hero-search .input:focus { outline:none; }
+.hs-icon { color:var(--maroon-600); display:grid; place-items:center; flex:none; }
+.hs-clear { border:none; background:var(--surface-2); color:var(--ink-muted); width:26px; height:26px; border-radius:50%; cursor:pointer; font-size:.72rem; flex:none; line-height:1; }
+.hs-clear:hover { background:var(--maroon-100); color:var(--maroon-700); }
+.hero-search .btn { border-radius:999px; padding:.55rem 1.4rem; flex:none; }
+.hs-suggest { position:absolute; top:calc(100% + .5rem); left:0; right:0; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); box-shadow:0 18px 48px rgba(0,42,85,.18); overflow:hidden; z-index:60; max-height:340px; overflow-y:auto; }
+.hs-suggest:empty { display:none !important; }
+.hs-item { display:flex; align-items:center; gap:.7rem; padding:.65rem 1rem; cursor:pointer; border-bottom:1px solid var(--border); font-size:.9rem; }
+.hs-item:last-child { border-bottom:none; }
+.hs-item:hover, .hs-item.active { background:var(--maroon-100); }
+.hs-item .hs-kind { font-size:.68rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; padding:.15rem .5rem; border-radius:999px; background:var(--navy-100); color:var(--navy-700); flex:none; }
+.hs-item .hs-kind.pkg { background:var(--maroon-100); color:var(--maroon-700); }
+.hs-item .hs-price { margin-left:auto; font-weight:800; color:var(--navy-700); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.hs-item .hs-sub { font-size:.76rem; color:var(--ink-faint); display:block; }
+[data-theme="dark"] .hs-item:hover, [data-theme="dark"] .hs-item.active { background:rgba(139,46,95,.25); }
+[data-theme="dark"] .hs-item .hs-kind { background:rgba(0,77,143,.35); color:#9CC3E8; }
+[data-theme="dark"] .hs-item .hs-kind.pkg { background:rgba(139,46,95,.35); color:#E8AAC8; }
+.searchbar:focus-within .input { border-color:var(--maroon-500); box-shadow:0 0 0 4px var(--maroon-100); }
+
+/* ================= FILTER BAR (landing search) ================= */
+.filter-bar { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; margin:1rem 0; }
+.filter-bar .label { font-size:.78rem; font-weight:700; color:var(--ink-muted); white-space:nowrap; }
+.filter-group { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+.filter-group label { font-size:.74rem; font-weight:600; color:var(--ink-faint); }
+.filter-group .value { font-size:.76rem; font-weight:700; color:var(--navy-700); min-width:2.2rem; }
+.range-slider { width:140px; accent-color:var(--maroon-700); }
+.toggle-switch { position:relative; display:inline-block; width:42px; height:24px; }
+.toggle-switch input { opacity:0; width:0; height:0; }
+.toggle-slider { position:absolute; cursor:pointer; inset:0; border-radius:999px; background:var(--navy-200); transition:.25s; }
+.toggle-slider:before { content:''; position:absolute; height:18px; width:18px; left:3px; bottom:3px; border-radius:50%; background:#fff; transition:.25s; }
+.toggle-switch input:checked + .toggle-slider { background:var(--grad-accent); }
+.toggle-switch input:checked + .toggle-slider:before { transform:translateX(18px); }
+.chip-filter { cursor:pointer; border:1px solid var(--border); background:var(--surface-2); padding:.35rem .8rem; border-radius:999px; font-size:.78rem; font-weight:600; transition:all .15s; }
+.chip-filter:hover { background:var(--maroon-50); border-color:var(--maroon-200); color:var(--maroon-700); }
+.chip-filter.active { background:var(--maroon-700); color:#fff; border-color:var(--maroon-700); }
+.chip-filter.active:hover { background:var(--maroon-600); }
+.clear-btn { color:var(--navy-500); font-size:.78rem; font-weight:600; text-decoration:none; }
+.clear-btn:hover { color:var(--maroon-700); }
+
+@media (prefers-reduced-motion: reduce){
+  .orb,.hero-scan,.viz,.promo-card::before,.ecg-anim,.ai-core,.viz-wrap::before,
+  .hero h1,.hero p.lead,.promo-card,.hero-cta,.viz-wrap { animation:none !important; }
+  .reveal { opacity:1; transform:none; transition:none; }
+}
+</style>
+</head>
+<body>
+
+<div id="chrome-header"></div>
+
+<main class="container">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero">
+    <div class="hero-bg-base" aria-hidden="true"></div>
+    <div class="orb orb-a" aria-hidden="true"></div>
+    <div class="orb orb-b" aria-hidden="true"></div>
+    <div class="orb orb-c" aria-hidden="true"></div>
+    <canvas id="neural" aria-hidden="true"></canvas>
+    <div class="hero-grid-tex" aria-hidden="true"></div>
+    <div class="hero-scan" aria-hidden="true"></div>
+    <div class="ai-core" aria-hidden="true"></div>
+
+    <div class="hero-inner">
+      <div>
+        <h1>Your Health. Our Science.<br><span class="grad-text">Now Powered by AI.</span></h1>
+        <p class="lead">Vanaja AI reads your diagnostic reports in seconds — flagging low/high values,
+        showing trends over time, and explaining results in simple language, in English and తెలుగు.</p>
+
+        <div class="promo-card" id="promoCard">
+          <div style="display:flex;align-items:center;gap:.8rem;flex-wrap:wrap">
+            <div class="promo-num" id="promoNum">SAVE UP TO …%</div>
+            <span class="badge-save">Vanaja Diagnostic Centre</span>
+          </div>
+          <p class="promo-copy" style="margin:.5rem 0 .9rem">On Health Checkups &amp; Diagnostic Tests · Trusted Diagnostics. Better Value.</p>
+          <p class="promo-copy" id="promoCopy" style="margin:0 0 1rem"></p>
+          <a class="btn btn-maroon btn-lg btn-glow" href="packages.html">Explore Health Packages →</a>
+        </div>
+
+        <!-- AI Report Analyzer hero CTA -->
+        <div class="hero-cta" style="display:flex;gap:.8rem;margin-top:1.2rem;flex-wrap:wrap">
+          <a class="btn glass btn-lg btn-glow ai-pulse" style="color:#fff;border-color:rgba(255,255,255,.35);background:linear-gradient(135deg,rgba(107,27,71,.65),rgba(139,46,95,.60))" href="report-insights.html">🤖 AI Report Insights</a>
+          <a class="btn glass btn-lg btn-glow" style="color:#fff;border-color:rgba(255,255,255,.35)" href="ai-assistant.html">Ask Vanaja AI</a>
+          <a class="btn glass btn-lg" style="color:#fff;border-color:rgba(255,255,255,.35)" href="recommender.html">🎯 Find my test</a>
+        </div>
+      </div>
+
+      <div class="viz-wrap">
+        <div class="viz" id="tiltViz" aria-hidden="true">
+          <div class="viz-head"><span>LIVE HEALTH OVERVIEW</span><span class="stat-pill">● Real-time</span></div>
+          <svg viewBox="0 0 400 150" style="width:100%">
+            <defs>
+              <linearGradient id="ecgGrad" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#7FA8CC"/><stop offset="60%" stop-color="#fff"/><stop offset="100%" stop-color="#C07AA0"/>
+              </linearGradient>
+              <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(255,255,255,.25)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 120 C40 118 60 90 90 92 C120 94 130 60 160 62 C190 64 200 84 230 82 C260 80 280 44 310 46 C340 48 360 70 400 66 L400 150 L0 150 Z" fill="url(#areaFill)"/>
+            <path class="ecg ecg-anim" d="M0 110 l30 0 l10 -14 l10 14 l24 0 l8 -50 l10 68 l10 -18 l28 0 l10 -12 l10 12 l30 0 l8 -40 l10 56 l12 -16 l26 0 l10 -10 l10 10 l40 0 l8 -46 l10 62 l12 -16 l40 0"/>
+            <circle cx="310" cy="46" r="4" fill="#C07AA0"><animate attributeName="r" values="4;7;4" dur="2s" repeatCount="indefinite"/></circle>
+          </svg>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:.8rem">
+            <div class="mini-stat"><div class="lbl">HbA1c</div><div class="val">5.6<span style="font-size:.7rem">%</span></div><div style="font-size:.65rem;color:#8FD9B8">● In range</div></div>
+            <div class="mini-stat"><div class="lbl">Vitamin D</div><div class="val">22</div><div style="font-size:.65rem;color:#F0C36A">● Low</div></div>
+            <div class="mini-stat"><div class="lbl">Next visit</div><div style="font-size:.92rem;font-weight:800;color:#fff">Tomorrow · 7 AM</div><div style="font-size:.65rem;color:#B9CFE3">Home collection</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DIFFERENTIATION ============ -->
+  <section class="section reveal" style="padding-top:0">
+    <div class="card">
+      <div class="section-head">
+          <div><div class="eyebrow">Differentiation</div><h2>Why Vanaja?</h2></div>
+          <p style="color:var(--ink-muted)">Trusted diagnostics with transparent pricing — no hidden fees, no artificial discounts.</p>
+        </div>
+        <div class="grid grid-3" style="margin-top:1rem">
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><span class="badge-save" style="background:rgba(255,255,255,.18)">69% OFFER</span><svg class="ic" viewBox="0 0 16 16"><path d="M8 14s1.5-2.7 3.5-2.7 3.5 2.7 3.5 2.7S9.5 14 8 14Z"/></svg></div>
+            <h4>Actual 69% Savings</h4>
+            <p style="font-size:.86rem">Every claimed % is auto-calculated from real configured prices. No artificial discounts.</p>
+          </article>
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><svg class="ic" viewBox="0 0 16 16"><path d="M2 8h12v2H2V8Zm3.6 1.7a.8.8 0 0 1 .3-.9l1.9-3.2a.8.8 0 0 1 1.5-.3l2.1 3.5a.8.8 0 0 1-.3 1.5l-2.2 3.1a.8.8 0 0 1-1.5-.2L7.2 6.2Z"/></svg><span style="color:var(--maroon-600)">Doctor Referrals</span></div>
+            <p style="font-size:.86rem">Physician-prescribed panels with real-time result sharing.</p>
+          </article>
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><svg class="ic" viewBox="0 0 16 16"><path d="M4 13c1.7 0 3.4-.7 4.8-2l.5-1.5A5.97 5.97 0 0 1 12 8c0-3.2-1.5-6.1-4-8.2l-.5 1.5A4.96 4.96 0 0 0 4 13ZM.5 9.5c0-.8.7-1.5 1.5-1h8c.8 0 1.5.7 1.5 1v7c0 .8-.7 1.5-1.5 1H4.5a2.5 2.5 0 0 1-2-2Zm6.5 4.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg><span style="color:var(--navy-600)">Home Collection</span></div>
+            <p style="font-size:.86rem">Free doorstep phlebotomy across Hyderabad &amp; Secunderabad.</p>
+          </article>
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><span style="font-size:1.2rem">🤖</span><span style="color:var(--maroon-600)">AI-Powered Reports</span></div>
+            <p style="font-size:.86rem">Vanaja AI explains every value in plain English or తెలుగు — no medical jargon needed.</p>
+          </article>
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><span style="font-size:1.2rem">🔐</span><span style="color:var(--navy-600)">Digital Health Vault</span></div>
+            <p style="font-size:.86rem">Every report stored for life, with year-wise timeline, trends and instant sharing with your doctor.</p>
+          </article>
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><span style="font-size:1.2rem">👨‍👩‍👧</span><span style="color:var(--maroon-600)">Family Health Hub</span></div>
+            <p style="font-size:.86rem">Track parents, spouse and kids from one account — consent-based, private and secure.</p>
+          </article>
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><span style="font-size:1.2rem">⏱️</span><span style="color:var(--navy-600)">Same-Day Reports</span></div>
+            <p style="font-size:.86rem">Most routine panels reported the same day, straight to your phone — no repeat visits.</p>
+          </article>
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><span style="font-size:1.2rem">🧪</span><span style="color:var(--maroon-600)">NABL-Grade Quality</span></div>
+            <p style="font-size:.86rem">Calibrated analyzers, daily quality controls and senior pathologist sign-off on every report.</p>
+          </article>
+          <article class="card card-hover" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;align-items:center;gap:.6rem"><span style="font-size:1.2rem">💬</span><span style="color:var(--navy-600)">Health Score & Reminders</span></div>
+            <p style="font-size:.86rem">A living health score from your reports, with smart reminders so no checkup is ever missed.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SEARCH ============ -->
+    <section class="reveal" style="padding:1.8rem 0 .4rem">
+      <form class="searchbar hero-search" onsubmit="return runSearch(event)" autocomplete="off">
+        <span class="hs-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span>
+        <input class="input" id="searchInput" placeholder='Search "CBC", "sugar", "thyroid" — or ask: "I want to check my sugar"' aria-label="Search tests and packages">
+        <button type="button" class="hs-clear" id="hsClear" aria-label="Clear search" style="display:none">✕</button>
+        <button class="btn btn-primary" type="submit">Search</button>
+        <div class="hs-suggest" id="hsSuggest" role="listbox" style="display:none"></div>
+      </form>
+    <div id="homeChips" style="display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.55rem"></div>
+    <p id="searchHint" style="color:var(--ink-faint);font-size:.83rem;margin-top:.5rem">Popular:
+      <a href="tests.html?q=cbc" style="color:var(--maroon-600)">CBC</a> ·
+      <a href="tests.html?q=sugar" style="color:var(--maroon-600)">Diabetes</a> ·
+      <a href="tests.html?q=thyroid" style="color:var(--maroon-600)">Thyroid</a> ·
+      <a href="packages.html#fullbody" style="color:var(--maroon-600)">Full body checkup</a></p>
+
+    <!-- ================= FILTER BAR ================= -->
+    <div class="filter-bar" id="filterBar">
+      <span class="label">Filters:</span>
+      <div class="filter-group">
+        <label>Category:</label>
+        <button type="button" class="chip-filter" data-cat="all">All</button>
+        <button type="button" class="chip-filter" data-cat="Haematology">Blood</button>
+        <button type="button" class="chip-filter" data-cat="Endocrine">Thyroid</button>
+        <button type="button" class="chip-filter" data-cat="Cardiac">Heart</button>
+        <button type="button" class="chip-filter" data-cat="Biochemistry">Liver/Kidney</button>
+        <button type="button" class="chip-filter" data-cat="Diabetes">Diabetes</button>
+        <button type="button" class="chip-filter" data-cat="Vitamins">Vitamins</button>
+        <button type="button" class="chip-filter" data-cat="Package">Packages</button>
+      </div>
+      <div class="filter-group">
+        <label>Max price: <span class="value" id="priceVal">₹5,000</span></label>
+        <input type="range" class="range-slider" id="priceRange" min="0" max="9000" step="500" value="9000">
+      </div>
+      <div class="filter-group">
+        <label>Offers only:</label>
+        <label class="toggle-switch">
+          <input type="checkbox" id="offerToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <a href="#" class="clear-btn" id="clearFilters" style="margin-left:auto">Clear all</a>
+    </div>
+
+    <div id="searchResults"></div>
+  </section>
+
+  <!-- ============ QUICK ACTIONS WITH REAL ICONS ============ -->
+  <section class="section reveal" style="padding-top:1.6rem">
+    <div class="qa-grid">
+      <a class="card card-hover qa" href="booking.html">
+        <span class="qa-icon"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg></span>
+        <b>Book Test</b><span>Walk-in or home visit</span>
+      </a>
+      <a class="card card-hover qa maroon" href="packages.html">
+        <span class="qa-icon"><svg class="ic" viewBox="0 0 24 24"><path d="M20 7 12 3 4 7v10l8 4 8-4z"/><path d="m4 7 8 4 8-4"/><path d="M12 11v10"/></svg></span>
+        <b>Health Packages</b><span>Curated by pathologists</span>
+      </a>
+      <a class="card card-hover qa" href="home-collection.html">
+        <span class="qa-icon"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9h13v-9"/><circle cx="12" cy="13.5" r="2.2" fill="currentColor"/></svg></span>
+        <b>Home Collection</b><span>Free doorstep pickup</span>
+      </a>
+      <a class="card card-hover qa maroon" href="reports.html">
+        <span class="qa-icon"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><line x1="10" y1="13" x2="16" y2="13"/><line x1="10" y1="17" x2="16" y2="17"/></svg></span>
+        <b>View Reports</b><span>Digital vault + trends</span>
+      </a>
+      <a class="card card-hover qa ai-glow" href="ai-assistant.html">
+        <span class="qa-icon" style="background:linear-gradient(135deg,#8B2E5F,#A64A78)"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/><circle cx="19" cy="17" r="1.6"/><circle cx="5" cy="17" r="1.6"/><path d="M12 15v3"/><path d="M6.4 17h3.8M13.8 17h3.8"/></svg></span>
+        <b>Ask Vanaja AI</b><span>English &amp; తెలుగు</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ============ AI REPORT ANALYZER HERO FEATURE ============ -->
+  <section class="section reveal" style="padding-top:0">
+    <div class="card ai-feature-card" style="background:linear-gradient(135deg,rgba(0,51,102,.10),rgba(107,27,71,.08));border-color:rgba(107,27,71,.25)">
+      <div class="section-head" style="text-align:center;padding-top:1rem">
+        <div><div class="eyebrow">Vanaja AI</div>
+        <h2 style="font-size:clamp(1.3rem,2.6vw,1.8rem);margin-bottom:.25em">AI Report Analyzer</h2>
+        <p style="color:var(--ink-muted);max-width:680px;margin:auto">Upload or receive any diagnostic report. Vanaja AI highlights high/low values against reference ranges, shows trends over time, explains results in simple English or తెలుగు, and suggests questions to discuss with your doctor — all without replacing clinical advice.</p>
+      </div>
+      <div style="display:flex;justify-content:center;gap:1rem;margin-top:1.6rem;flex-wrap:wrap">
+        <a class="btn btn-maroon btn-lg btn-glow ai-pulse" href="report-insights.html">Try AI Report Insights →</a>
+        <a class="btn btn-ghost" href="ai-assistant.html">Ask Vanaja AI</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PACKAGES ============ -->
+  <section class="section reveal" id="popularPackages">
+    <div class="section-head">
+      <div><div class="eyebrow">Save More</div><h2>Featured Health Packages</h2></div>
+      <a class="btn btn-ghost btn-sm" href="packages.html">View all packages</a>
+    </div>
+    <div class="grid grid-3" id="pkgGrid"></div>
+  </section>
+
+  <!-- ============ TESTS ============ -->
+  <section class="section reveal" style="padding-top:0">
+    <div class="section-head">
+      <div><div class="eyebrow">Most Booked</div><h2>Popular Diagnostic Tests</h2></div>
+      <a class="btn btn-ghost btn-sm" href="tests.html">View all 70+ tests</a>
+    </div>
+    <div class="grid grid-3" id="testGrid"></div>
+  </section>
+
+  <!-- ============ HOME COLLECTION + CENTRES ============ -->
+  <section class="section reveal" style="padding-top:0">
+    <div class="grid grid-2">
+      <div class="offer-card" style="display:flex;flex-direction:column;justify-content:center;gap:.6rem">
+        <span class="badge-save" style="align-self:flex-start;background:rgba(255,255,255,.18)">Free Service</span>
+        <h2 style="color:#fff">Free Home Sample Collection</h2>
+        <p style="color:#DCE9F4;margin:0">Trained phlebotomists collect your samples safely at home across Hyderabad &amp; Secunderabad — at no extra cost.</p>
+        <div style="display:flex;gap:.7rem;margin-top:.5rem;flex-wrap:wrap">
+          <a class="btn glass btn-sm" style="color:#fff;border-color:rgba(255,255,255,.4)" href="home-collection.html">Schedule Pickup</a>
+          <a class="btn btn-sm" style="background:#fff;color:var(--navy-700)" href="#centres">Find a nearby centre</a>
+        </div>
+      </div>
+      <div class="card" id="centres">
+        <div class="eyebrow">Our Network</div>
+        <h3>3 Convenient Branches</h3>
+        <ul style="list-style:none;padding:0;line-height:2.1;font-size:.93rem">
+          <li>📍 <b>Kavadiguda (Main)</b> — Kavadiguda Main Rd, Secunderabad – 500003</li>
+          <li>📍 <b>Hasmathpet</b> — Opp. Jamia Masjid, Bowenpally, Secunderabad – 500009</li>
+          <li>📍 <b>Padmashali Colony</b> — Secunderabad</li>
+        </ul>
+        <p style="font-size:.85rem;color:var(--ink-muted)">Open Mon–Sat 7 AM – 10 PM · Sun 7 AM – 2 PM<br>
+        <a href="tel:+919000011580" style="color:var(--maroon-600);font-weight:700">+91 90000 11580</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FAMILY HEALTH OVERVIEW ============ -->
+  <section class="section reveal" style="padding-top:0">
+    <div class="section-head">
+      <div><div class="eyebrow">One account · Whole family</div><h2>Family health overview</h2></div>
+      <a class="btn btn-ghost btn-sm" href="family.html">Manage family →</a>
+    </div>
+    <div class="grid grid-3" id="familyOverviewGrid"></div>
+  </section>
+
+  <!-- ============ TRUST COUNTERS ============ -->
+  <section class="section reveal" style="padding-top:0">
+    <div class="card trust-row">
+      <div class="trust-item"><b data-count="18" data-suffix="+">0</b><span style="font-size:.82rem">Years of Excellence</span></div>
+      <div class="trust-item"><b data-count="50" data-suffix="K+">0</b><span style="font-size:.82rem">Happy Patients</span></div>
+      <div class="trust-item"><b data-count="70" data-suffix="+">0</b><span style="font-size:.82rem">Tests Available</span></div>
+      <div class="trust-item"><b>4.8★</b><span style="font-size:.82rem">Patient Rating</span></div>
+      <div class="trust-item"><b>ISO</b><span style="font-size:.82rem">9001:2015 Certified</span></div>
+    </div>
+  </section>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Home');
+
+/* ---------- Promo truth ---------- */
+(function(){
+  const promo = campaignHeadline();
+  if (promo){
+    document.getElementById('promoNum').textContent = `SAVE UP TO ${promo.percent}%`;
+    document.getElementById('promoCopy').textContent = promo.copy;
+  } else document.getElementById('promoCard').style.display='none';
+})();
+
+/* ---------- Neural canvas ---------- */
+(function(){
+  const cv=document.getElementById('neural');
+  if(!cv||matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const ctx=cv.getContext('2d'); let W,H,pts=[],raf;
+  const dpr=Math.min(devicePixelRatio||1,2);
+  function resize(){ W=cv.width=cv.offsetWidth*dpr; H=cv.height=cv.offsetHeight*dpr;
+    pts=Array.from({length:Math.min(46,Math.floor(cv.offsetWidth/26))},()=>({
+      x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.28*dpr,vy:(Math.random()-.5)*.28*dpr,
+      r:(Math.random()*1.6+.8)*dpr,hue:Math.random()<.68?'127,168,204':'192,122,160'})); }
+  function tick(){ ctx.clearRect(0,0,W,H);
+    for(const p of pts){ p.x+=p.vx;p.y+=p.vy; if(p.x<0||p.x>W)p.vx*=-1; if(p.y<0||p.y>H)p.vy*=-1;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fillStyle=`rgba(${p.hue},.75)`;ctx.fill(); }
+    const L=130*dpr;
+    for(let i=0;i<pts.length;i++)for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.hypot(dx,dy);
+      if(d<L){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);
+        ctx.strokeStyle=`rgba(127,168,204,${(1-d/L)*.28})`;ctx.lineWidth=dpr*.7;ctx.stroke();}}
+    raf=requestAnimationFrame(tick); }
+  resize();tick();
+  addEventListener('resize',()=>{cancelAnimationFrame(raf);resize();tick();});
+})();
+
+/* ---------- Tilt ---------- */
+(function(){
+  const el=document.getElementById('tiltViz');
+  if(!el||matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const wrap=el.parentElement;
+  wrap.addEventListener('pointermove',e=>{ const r=wrap.getBoundingClientRect();
+    el.style.transform=`rotateX(${((e.clientY-r.top)/r.height-.5)*-7}deg) rotateY(${((e.clientX-r.left)/r.width-.5)*9}deg)`; });
+  wrap.addEventListener('pointerleave',()=>el.style.transform='');
+})();
+
+/* ---------- Scroll reveal + counters ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){e.target.classList.add('revealed');io.unobserve(e.target);} }),{threshold:.12});
+document.querySelectorAll('.reveal').forEach((el,i)=>{ el.style.setProperty('--d',(i%3)*.08+'s'); io.observe(el); });
+const cio=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return; const el=e.target,end=+el.dataset.count,suf=el.dataset.suffix||'',t0=performance.now();
+  (function step(t){ const k=Math.min(1,(t-t0)/1300),ease=1-Math.pow(1-k,3);
+    el.textContent=Math.round(end*ease)+suf; if(k<1)requestAnimationFrame(step); })(t0);
+  cio.unobserve(el);
+}),{threshold:.5});
+document.querySelectorAll('[data-count]').forEach(el=>cio.observe(el));
+
+/* ---------- Package cards ---------- */
+const savingsOf=p=>Math.round((p.originalPrice-p.currentPrice)/p.originalPrice*100);
+document.getElementById('pkgGrid').innerHTML=PACKAGES.map(p=>`
+  <article class="card card-hover">
+    <div class="pkg-topline"><span class="chip">${p.tag}</span><span class="badge-save">Save ${savingsOf(p)}%</span></div>
+    <h3 style="margin:.7rem 0 .25rem">${p.name}</h3>
+    <p style="color:var(--ink-muted);font-size:.9rem;margin:0">${p.desc} · ${p.testsCount} tests</p>
+    <ul class="includes">${p.includes.map(i=>`<li>${i}</li>`).join('')}</ul>
+    <div style="margin:.4rem 0 .8rem"><span class="price">${fmtINR(p.currentPrice)}</span><span class="price-strike">${fmtINR(p.originalPrice)}</span></div>
+    <div style="display:flex;gap:.5rem">
+      <a class="btn btn-primary btn-sm" style="flex:1" href="booking.html?package=${p.id}">Book Now</a>
+      <a class="btn btn-ghost btn-sm" href="packages.html#${p.id}">Details</a>
+    </div>
+  </article>`).join('');
+
+const popularIds=['cbp','thyroid','lpt','lft','ghba1c'];
+document.getElementById('testGrid').innerHTML=TESTS.filter(t=>popularIds.includes(t.id)).map(t=>{
+  const offer=loadOffers().find(o=>o.ref===t.id&&o.active);
+  return `<article class="card card-hover">
+    <div class="pkg-topline"><span class="chip">${t.cat}</span>${offer?`<span class="badge-save">Save ${savingsPct(offer)}%</span>`:''}</div>
+    <h4 style="margin:.6rem 0 .2rem">${t.name}</h4>
+    <p style="color:var(--ink-muted);font-size:.86rem;margin:0 0 .5rem">${t.desc}</p>
+    <small style="color:var(--ink-faint);display:block;margin-bottom:.6rem"><svg class="ic" viewBox="0 0 16 16" style="width:15px;height:15px;vertical-align:middle;margin-right:.3rem"><path d="M12 2H4v12h8a2 2 0 0 0 2-2V6l-4-4Z"/><line x1="8" y1="10" x2="12" y2="10"/><line x1="6" y1="8" x2="10" y2="8"/></svg> ${t.prep}</small>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div><span class="price" style="font-size:1.15rem">${fmtINR(t.price)}</span>${offer&&offer.originalPrice>t.price?`<span class="price-strike">${fmtINR(offer.originalPrice)}</span>`:''}</div>
+      <a class="btn btn-primary btn-sm" href="booking.html?test=${t.id}">Book</a>
+    </div>
+  </article>`;
+}).join('');
+
+/* ---------- Family health overview ---------- */
+(function(){
+  const FAM=[
+    {n:'Ramaiah', r:'Father', s:'attention', m:'Lipid Profile · LDL high'},
+    {n:'Sujatha', r:'Mother', s:'good',      m:'Thyroid · normal'},
+    {n:'You',     r:'Self',   s:'monitoring',m:'HbA1c 5.8% · watch'},
+  ];
+  const PILL={attention:['Attention needed','st-attention'],monitoring:['Monitoring','st-monitor'],good:['Good','st-good']};
+  const grid=document.getElementById('familyOverviewGrid');
+  if(grid) grid.innerHTML=FAM.map(f=>{
+    const [lbl]=PILL[f.s];
+    return `<a class="card card-hover" href="family.html" style="text-decoration:none;display:flex;gap:.7rem;align-items:center">
+      <span class="pf-avatar" style="width:42px;height:42px;font-size:1rem;${f.r==='Mother'?'background:var(--grad-accent);':''}">${f.n[0]}</span>
+      <span style="flex:1"><b>${f.n}</b> <small style="color:var(--ink-muted)">· ${f.r}</small><br>
+        <small style="color:var(--ink-faint)">${f.m}</small></span>
+      <span class="status-pill ${PILL[f.s][1]}">${lbl}</span></a>`;
+  }).join('');
+})();
+
+/* ---------- Search + Filters ---------- */
+const FILTERS = { category: 'all', maxPrice: 9000, offersOnly: false };
+
+/* Update price label */
+function updatePriceLabel(){
+  const val = document.getElementById('priceRange').value;
+  document.getElementById('priceVal').textContent = '₹' + Number(val).toLocaleString('en-IN');
+}
+
+/* Render search results respecting active filters */
+/* ---------- Live search suggestions ---------- */
+(function(){
+  const inp=document.getElementById('searchInput'), box=document.getElementById('hsSuggest'), clr=document.getElementById('hsClear');
+  if(!inp||!box) return;
+  let items=[], sel=-1;
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function suggest(){
+    const q=inp.value.trim();
+    clr.style.display=q?'grid':'none';
+    if(q.length<2){ box.style.display='none'; box.innerHTML=''; items=[]; return; }
+    const r=smartSearch(q);
+    items=[
+      ...r.packages.slice(0,3).map(p=>({kind:'Package',pkg:true,name:p.name,sub:`${p.testsCount} tests · home collection`,price:fmtINR(p.currentPrice),href:'packages.html#'+p.id})),
+      ...r.tests.slice(0,5).map(t=>({kind:'Test',name:t.name,sub:t.cat,price:t.price!=null?fmtINR(t.price):'Enquire',href:'booking.html?test='+t.id}))
+    ].slice(0,7);
+    if(!items.length){
+      box.innerHTML=`<div class="hs-item" style="cursor:default"><span class="hs-kind pkg">AI</span><span>No exact match — <a href="ai-assistant.html" style="color:var(--maroon-600);font-weight:700">ask Vanaja AI</a></span></div>`;
+      box.style.display='block'; return;
+    }
+    box.innerHTML=items.map((it,i)=>`<div class="hs-item" data-i="${i}" role="option"><span class="hs-kind ${it.pkg?'pkg':''}">${it.kind}</span><span><b>${esc(it.name)}</b><span class="hs-sub">${esc(it.sub)}</span></span><span class="hs-price">${it.price}</span></div>`).join('');
+    box.style.display='block'; sel=-1;
+    box.querySelectorAll('.hs-item[data-i]').forEach(el=>el.addEventListener('mousedown',ev=>{ev.preventDefault();location.href=items[+el.dataset.i].href;}));
+  }
+  inp.addEventListener('input',suggest);
+  inp.addEventListener('focus',suggest);
+  inp.addEventListener('keydown',e=>{
+    if(box.style.display==='none') return;
+    const els=box.querySelectorAll('.hs-item[data-i]');
+    if(e.key==='ArrowDown'){e.preventDefault();sel=Math.min(sel+1,els.length-1);}
+    else if(e.key==='ArrowUp'){e.preventDefault();sel=Math.max(sel-1,0);}
+    else if(e.key==='Enter'&&sel>=0){e.preventDefault();location.href=items[sel].href;return;}
+    else if(e.key==='Escape'){box.style.display='none';return;}
+    else return;
+    els.forEach((el,i)=>el.classList.toggle('active',i===sel));
+  });
+  document.addEventListener('click',e=>{ if(!e.target.closest('.hero-search')) box.style.display='none'; });
+  clr.addEventListener('click',()=>{ inp.value=''; inp.focus(); suggest(); document.getElementById('searchResults').innerHTML=''; });
+})();
+
+function runSearch(e){
+  if (e && e.preventDefault) e.preventDefault();
+  const q = document.getElementById('searchInput').value;
+  const r = smartSearch(q, FILTERS);
+  document.getElementById('searchResults').innerHTML = `
+    ${r.note ? `<p style="margin:.9rem 0 0;color:var(--maroon-600);font-weight:700">💡 ${r.note} — here's what we found:</p>` : ''}
+    <div class="grid grid-3" style="margin-top:.9rem">
+      ${r.packages.map(p => `<a class="card card-hover" href="packages.html#${p.id}" style="text-decoration:none"><b>${p.name}</b><div><span class="price" style="font-size:1.1rem">${fmtINR(p.currentPrice)}</span><span class="price-strike">${fmtINR(p.originalPrice)}</span></div><span class="chip">Package · ${p.testsCount} tests</span></a>`).join('')}
+      ${r.tests.map(t => `<a class="card card-hover" href="booking.html?test=${t.id}" style="text-decoration:none"><b>${t.name}</b><div><span class="price" style="font-size:1.1rem">${fmtINR(t.price)}</span></div><span class="chip">${t.cat}</span></a>`).join('')}
+    </div>`;
+  document.getElementById('searchResults').scrollIntoView({behavior:'smooth',block:'nearest'});
+  return false;
+}
+
+/* Filter event wiring */
+(function setupFilters(){
+  const chips = document.querySelectorAll('.chip-filter');
+  chips.forEach(b => b.addEventListener('click', () => {
+    chips.forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    FILTERS.category = b.dataset.cat;
+    runSearch();
+  }));
+  // mark "All" as active by default
+  const allChip = document.querySelector('.chip-filter[data-cat="all"]');
+  if (allChip) allChip.classList.add('active');
+
+  const range = document.getElementById('priceRange');
+  if (range){
+    range.addEventListener('input', () => {
+      FILTERS.maxPrice = Number(range.value);
+      updatePriceLabel();
+      runSearch();
+    });
+  }
+
+  const offerToggle = document.getElementById('offerToggle');
+  if (offerToggle){
+    offerToggle.addEventListener('change', () => {
+      FILTERS.offersOnly = offerToggle.checked;
+      runSearch();
+    });
+  }
+
+  const clearBtn = document.getElementById('clearFilters');
+  if (clearBtn){
+    clearBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      FILTERS.category = 'all'; FILTERS.maxPrice = 9000; FILTERS.offersOnly = false;
+      if (range) range.value = 9000;
+      updatePriceLabel();
+      offerToggle.checked = false;
+      chips.forEach(x => x.classList.remove('active'));
+      if (allChip) allChip.classList.add('active');
+      runSearch();
+    });
+  }
+
+  // URL param: q= or cat=
+  const u = new URLSearchParams(location.search);
+  const q0 = u.get('q');
+  if (q0) document.getElementById('searchInput').value = q0;
+  const cat0 = u.get('cat');
+  if (cat0){
+    const chip = document.querySelector(`.chip-filter[data-cat="${cat0}"]`);
+    if (chip){
+      chips.forEach(x => x.classList.remove('active'));
+      chip.classList.add('active');
+      FILTERS.category = cat0;
+    }
+  }
+  updatePriceLabel();
+  runSearch();
+})();
+</script>
+</body>
+</html>

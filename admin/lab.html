@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Workflow — Vanaja Admin</title>
+<link rel="icon" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/theme.css">
+<style>
+.admin-layout { display:grid; grid-template-columns:230px 1fr; min-height:100vh; }
+@media (max-width:900px){ .admin-layout { grid-template-columns:1fr; } .sidenav{position:static!important;height:auto!important;} }
+.sidenav { background:var(--navy-900); color:var(--navy-200); position:sticky; top:0; height:100vh; padding:1rem .8rem; display:flex; flex-direction:column; gap:.2rem; }
+.sidenav a { display:flex; gap:.6rem; align-items:center; text-decoration:none; color:inherit; font-weight:700; font-size:.9rem; padding:.65rem .85rem; border-radius:var(--r-md); }
+.sidenav a:hover, .sidenav a[aria-current="page"] { background:rgba(255,255,255,.09); color:#fff; }
+.kanban { display:grid; grid-template-columns:repeat(8,minmax(215px,1fr)); gap:.8rem; overflow-x:auto; padding-bottom:.8rem; }
+@media (max-width:1400px){ .kanban{grid-template-columns:repeat(8,225px);} }
+.kcol { background:var(--surface-2); border-radius:var(--r-lg); padding:.75rem .7rem; min-width:215px; border-top:4px solid var(--stage-clr,#999); }
+.kcol h4 { font-size:.76rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); margin:0 0 .6rem; display:flex; justify-content:space-between; align-items:center; gap:.3rem; }
+.kcol h4 small { font-weight:600; text-transform:none; letter-spacing:0; color:var(--ink-faint); }
+.kcard { background:var(--surface); border:1px solid var(--border); border-radius:var(--r-md); padding:.6rem .75rem; margin-bottom:.5rem; box-shadow:var(--shadow-1); font-size:.82rem; cursor:grab; transition:transform var(--t-fast),box-shadow var(--t-fast); }
+.kcard:hover { transform:translateY(-2px); box-shadow:var(--shadow-2); }
+.kcard.done { border-color:#1E9E6A; background:rgba(30,158,106,.07); }
+.kcard b { display:block; font-size:.86rem; }
+.kcard small { color:var(--ink-faint); display:block; line-height:1.5; }
+.kcard .flag { color:#B3261E; font-weight:700; }
+.kcard button { margin-top:.4rem; width:100%; }
+.stage-btn { font-size:.72rem; padding:.3rem .5rem; }
+.audit { font-size:.78rem; line-height:1.7; }
+.audit time { color:var(--ink-faint); font-variant-numeric:tabular-nums; margin-right:.4rem; }
+.gate-note { font-size:.74rem; color:var(--ink-faint); margin-top:.4rem; line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidenav">
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem 1rem">
+      <img src="../assets/img/logo.png" alt="Vanaja" style="height:38px;background:#fff;border-radius:8px;padding:.15rem">
+      <b style="color:#fff;font-size:.9rem">Operations OS</b>
+    </div>
+    <a href="index.html">📊 Dashboard</a>
+    <a href="offers.html">🏷️ Packages & Offers</a>
+    <a href="patients.html">🧑‍💼 Patients</a>
+    <a href="lab.html" aria-current="page">🧪 Lab Workflow</a>
+    <a href="phlebo.html">🛵 Phlebotomist</a>
+    <a href="branches.html">🏥 Branches</a>
+    <div style="margin-top:auto;font-size:.78rem;padding:.6rem">Role: <b style="color:#fff">Lab Tech / Pathologist</b></div>
+  </aside>
+
+  <main style="padding:1.6rem">
+    <header style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.7rem;margin-bottom:1.1rem">
+      <h1 style="margin:0">Sample → Report Pipeline</h1>
+      <span class="chip">Drag a card (or use its button) to advance · every move audit-logged</span>
+    </header>
+
+    <div class="kanban" id="board"><!-- JS --></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.4rem" class="two-col">
+      <section class="card">
+        <h3 style="margin:.2rem 0 .6rem">📜 Audit trail</h3>
+        <div class="audit" id="auditLog"></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:.6rem" onclick="clearAudit()">Clear log</button>
+      </section>
+      <section class="card">
+        <h3 style="margin:.2rem 0 .6rem">🛡️ Quality gates</h3>
+        <ul style="list-style:none;padding:0;font-size:.86rem;line-height:2;color:var(--ink-muted)">
+          <li>🔒 <b>Processing → Quality Review:</b> analyzer QC must pass (delta checks, control ranges)</li>
+          <li>🔒 <b>Report Generated → Pathologist Review:</b> critical values auto-flag for priority read</li>
+          <li>🔒 <b>Pathologist Review → Approved:</b> requires pathologist role sign-off — AI never auto-approves</li>
+          <li>📲 <b>Approved → Patient Notified:</b> SMS/WhatsApp + vault update fires automatically</li>
+        </ul>
+        <label style="display:flex;gap:.5rem;align-items:center;font-size:.84rem;margin-top:.5rem">
+          <input type="checkbox" id="pathologistMode" checked> Sign as <b>Pathologist</b> (required for approval)
+        </label>
+      </section>
+    </div>
+  </main>
+</div>
+<style>@media (max-width:1000px){ .two-col{grid-template-columns:1fr!important;} }</style>
+<script src="../assets/js/app.js"></script>
+<script>
+applyPrefs();
+
+/* ============ 8-STAGE PIPELINE ============ */
+const STAGES = [
+  { name:'Sample Collected',    clr:'#8A6BB8', cards:[
+      { id:'VDC-8820', test:'CBC · P1001', note:'Phlebo: Ramesh · 7:42 AM' },
+      { id:'VDC-8821', test:'HbA1c · Walk-in', note:'Phlebo: Ramesh · 8:05 AM' } ]},
+  { name:'Sample Received',     clr:'#3E7CB1', cards:[
+      { id:'VDC-8818', test:'LFT · P1042', note:'Barcoded · centrifuged' } ]},
+  { name:'Processing',          clr:'#B36A00', cards:[
+      { id:'VDC-8806', test:'Lipid · P1042', note:'Analyzer: Cobas c311' },
+      { id:'VDC-8807', test:'HbA1c · P1088', note:'HPLC run in progress' },
+      { id:'VDC-8809', test:'Thyroid · P1156', note:'CMIA · TAT 3h' } ]},
+  { name:'Quality Review',      clr:'#0F8A6D', cards:[
+      { id:'VDC-8798', test:'Full Body · P1203', note:'QC passed ✓ delta check ok' } ]},
+  { name:'Report Generated',    clr:'#6B4FA1', cards:[
+      { id:'VDC-8812', test:'CBC · P1001', note:'PDF drafted · values auto-verified' },
+      { id:'VDC-8815', test:'Vitamin D · P1001', note:'⚠ Critical low: 8 ng/mL', flag:true } ]},
+  { name:'Pathologist Review',  clr:'#B3261E', cards:[
+      { id:'VDC-8801', test:'CBC · P1120', note:'Dr. Rao reviewing' },
+      { id:'VDC-8802', test:'Lipid · P1188', note:'Awaiting sign-off' } ]},
+  { name:'Approved',            clr:'#1E9E6A', cards:[] },
+  { name:'Patient Notified',    clr:'#1E9E6A', done:true, cards:[
+      { id:'VDC-8790', test:'Diabetes Pkg · P1042', note:'SMS + WhatsApp sent · vault updated' } ]},
+];
+
+const LS_KEY='vd_lab_pipeline';
+try{ const saved=JSON.parse(localStorage.getItem(LS_KEY)); if(Array.isArray(saved)&&saved.length===STAGES.length) STAGES.forEach((s,i)=>s.cards=saved[i].cards); }catch(_){ }
+function persist(){ localStorage.setItem(LS_KEY, JSON.stringify(STAGES.map(s=>s.cards))); }
+
+const audit=[];
+function log(msg){ audit.unshift({t:new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}), msg}); renderAudit(); }
+function renderAudit(){
+  document.getElementById('auditLog').innerHTML = audit.length
+    ? audit.map(a=>`<div><time>${a.t}</time>${a.msg}</div>`).join('')
+    : '<span style="color:var(--ink-faint)">No moves this session yet.</span>';
+}
+function clearAudit(){ audit.length=0; renderAudit(); }
+
+function render(){
+  document.getElementById('board').innerHTML = STAGES.map((st,si)=>`
+    <div class="kcol" style="--stage-clr:${st.clr}" ondragover="event.preventDefault()" ondrop="drop(event,${si})">
+      <h4>${st.name} <span class="chip">${st.cards.length}</span></h4>
+      ${st.cards.map((c,ci)=>{
+        const nextName = si<STAGES.length-1 ? STAGES[si+1].name : null;
+        const blocked = nextName==='Pathologist Review' && !document.getElementById('pathologistMode').checked
+                        ? false : false; /* gate enforced on approve below */
+        return `<div class="kcard ${st.done?'done':''}" draggable="true" ondragstart="drag(event,${si},${ci})">
+          <b>${c.id}</b><small>${c.test}<br>${c.note}${c.flag?'<br><span class="flag">⚑ Critical value</span>':''}</small>
+          ${nextName&&!st.done?`<button class="btn btn-primary stage-btn" onclick="advance(${si},${ci})">→ ${nextName}</button>`:''}
+        </div>`;
+      }).join('')}
+      <div class="gate-note">${gateNote(si)}</div>
+    </div>`).join('');
+  persist();
+}
+function gateNote(si){
+  const n = STAGES[si].name;
+  if(n==='Quality Review') return '🔒 QC gate: control ranges + delta checks';
+  if(n==='Pathologist Review') return '🔒 Requires pathologist sign-off';
+  if(n==='Approved') return '📲 Auto: SMS/WhatsApp + vault write';
+  if(n==='Patient Notified') return '✅ Terminal stage';
+  return '';
+}
+function advance(si,ci){
+  const st=STAGES[si], card=st.cards[ci];
+  /* GATE: only a signed-in pathologist can approve */
+  if(STAGES[si+1].name==='Approved' && !document.getElementById('pathologistMode').checked){
+    toast && toast('⛔ Approval blocked — pathologist sign-off required'); return;
+  }
+  st.cards.splice(ci,1);
+  STAGES[si+1].cards.push(card);
+  if(STAGES[si+1].done) card.note='SMS + WhatsApp sent · vault updated';
+  log(`<b>${card.id}</b> ${st.name} → <b>${STAGES[si+1].name}</b>${card.flag?' <span class="flag">(critical — priority read)</span>':''}`);
+  render();
+}
+let dragCtx=null;
+function drag(e,s,c){ dragCtx={s,c}; }
+function drop(e,target){
+  e.preventDefault();
+  if(!dragCtx) return;
+  if(target===dragCtx.s+0){ dragCtx=null; return; }
+  /* moving backwards is allowed for rework, forwards via same path */
+  const card=STAGES[dragCtx.s].cards.splice(dragCtx.c,1)[0];
+  STAGES[target].cards.push(card);
+  log(`<b>${card.id}</b> ${STAGES[dragCtx.s].name} → <b>${STAGES[target].name}</b> (drag)`);
+  dragCtx=null; render();
+}
+log('Session opened · pipeline loaded from saved state');
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Test Recommendation — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+/* Wizard */
+.wizard-steps { display:flex; gap:.4rem; margin:1.1rem 0 .6rem; flex-wrap:wrap; }
+.wstep { flex:1; min-width:110px; text-align:center; font-size:.76rem; font-weight:800; padding:.5rem .4rem;
+  border-radius:var(--r-full); background:var(--surface-2); color:var(--ink-faint); border:1px solid var(--border); }
+.wstep.active { background:var(--grad-accent); color:#fff; border-color:transparent; box-shadow:var(--glow-maroon); }
+.wstep.done { color:#1E9E6A; border-color:#1E9E6A; }
+.progress-track { margin-bottom:.4rem; }
+
+.goal-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:.7rem; margin-top:.9rem; }
+.goal-card { cursor:pointer; border:2px solid var(--border); border-radius:var(--r-lg); padding:.9rem .8rem;
+  background:var(--surface); text-align:center; transition:all var(--t-fast); font-weight:700; font-size:.88rem; }
+.goal-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-2); border-color:var(--navy-300); }
+.goal-card.sel { border-color:var(--maroon-600); background:var(--maroon-50); color:var(--maroon-700);
+  box-shadow:0 0 0 4px rgba(139,46,95,.12); }
+[data-theme="dark"] .goal-card.sel { background:rgba(139,46,95,.18); }
+.goal-card .g-icon { font-size:1.5rem; display:block; margin-bottom:.35rem; }
+
+.q-row { margin:1rem 0; }
+.q-label { font-weight:800; font-size:.95rem; margin-bottom:.5rem; display:block; }
+.choice-row { display:flex; gap:.5rem; flex-wrap:wrap; }
+.chip-choice { cursor:pointer; border:1.5px solid var(--border); border-radius:var(--r-full);
+  padding:.45rem 1rem; font-weight:700; font-size:.85rem; background:var(--surface); }
+.chip-choice.sel { border-color:var(--navy-500); background:var(--navy-50); color:var(--navy-700); box-shadow:0 0 0 3px var(--navy-100); }
+[data-theme="dark"] .chip-choice.sel { background:rgba(21,92,153,.25); }
+
+/* Results */
+.rec-card { border-left:4px solid var(--maroon-600); }
+.rec-card.primary-rec { border-left-color:#1E9E6A; background:linear-gradient(135deg,rgba(30,158,106,.06),transparent); }
+.match-pill { font-size:.68rem; font-weight:800; letter-spacing:.05em; background:rgba(30,158,106,.12);
+  color:#1E7A54; border-radius:var(--r-full); padding:.15rem .6rem; }
+.reason-line { font-size:.84rem; color:var(--ink-muted); margin:.35rem 0 .6rem;
+  padding-left:1.1rem; position:relative; }
+.reason-line::before { content:"✓"; position:absolute; left:0; color:#1E9E6A; font-weight:800; }
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="eyebrow">Vanaja AI · Test Recommendation Engine</div>
+  <h1>Find the right test for you</h1>
+  <p style="max-width:44rem;color:var(--ink-muted)">Answer a few simple questions and Vanaja AI will suggest
+  relevant tests and health packages from our catalogue.
+  <b>Suggestions are informational only — not a medical diagnosis.</b></p>
+
+  <!-- wizard progress -->
+  <div class="wizard-steps" aria-hidden="true">
+    <div class="wstep active" data-w="1">1 · Goal</div>
+    <div class="wstep" data-w="2">2 · About you</div>
+    <div class="wstep" data-w="3">3 · Health profile</div>
+    <div class="wstep" data-w="4">4 · Recommendations</div>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="wizFill" style="width:25%"></div></div>
+
+  <!-- ============ STEP 1: GOAL ============ -->
+  <section class="card wpanel" id="wp1" style="margin-top:1.2rem">
+    <h3>What brings you in today?</h3>
+    <div class="goal-grid" id="goalGrid">
+      <button type="button" class="goal-card" data-goal="wellness"><span class="g-icon">🩺</span>General wellness checkup</button>
+      <button type="button" class="goal-card" data-goal="diabetes"><span class="g-icon">🍬</span>Diabetes monitoring</button>
+      <button type="button" class="goal-card" data-goal="thyroid"><span class="g-icon">🦋</span>Thyroid check</button>
+      <button type="button" class="goal-card" data-goal="vitamin"><span class="g-icon">☀️</span>Vitamin testing</button>
+      <button type="button" class="goal-card" data-goal="cardiac"><span class="g-icon">❤️</span>Cardiac risk screening</button>
+      <button type="button" class="goal-card" data-goal="senior"><span class="g-icon">🧑‍🦳</span>Senior health package</button>
+      <button type="button" class="goal-card" data-goal="women"><span class="g-icon">👩</span>Women's health</button>
+      <button type="button" class="goal-card" data-goal="men"><span class="g-icon">👨</span>Men's health</button>
+    </div>
+  </section>
+
+  <!-- ============ STEP 2: ABOUT YOU ============ -->
+  <section class="card wpanel" id="wp2" style="margin-top:1.2rem;display:none">
+    <h3>A little about you</h3>
+    <div class="q-row grid grid-2">
+      <div class="field">
+        <label for="ageInput" class="q-label">Age</label>
+        <input class="input" id="ageInput" type="number" min="1" max="120" placeholder="e.g. 35">
+      </div>
+      <div class="field">
+        <label class="q-label">Sex <span style="font-weight:500;color:var(--ink-faint)">(for relevant panels)</span></label>
+        <div class="choice-row" id="sexRow">
+          <button type="button" class="chip-choice" data-v="female">Female</button>
+          <button type="button" class="chip-choice" data-v="male">Male</button>
+          <button type="button" class="chip-choice" data-v="na">Prefer not to say</button>
+        </div>
+      </div>
+    </div>
+    <div class="q-row">
+      <label class="q-label">Do you have any known conditions? <span style="font-weight:500;color:var(--ink-faint)">(optional)</span></label>
+      <div class="choice-row" id="condRow">
+        <button type="button" class="chip-choice" data-v="diabetes">Diabetes</button>
+        <button type="button" class="chip-choice" data-v="thyroid">Thyroid disorder</button>
+        <button type="button" class="chip-choice" data-v="bp">High BP / heart concern</button>
+        <button type="button" class="chip-choice" data-v="anemia">Anemia / weakness</button>
+        <button type="button" class="chip-choice" data-v="none">None that I know of</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 3: HEALTH PROFILE ============ -->
+  <section class="card wpanel" id="wp3" style="margin-top:1.2rem;display:none">
+    <h3>Lifestyle & symptoms</h3>
+    <div class="q-row">
+      <label class="q-label">How would you describe your energy lately?</label>
+      <div class="choice-row" id="energyRow">
+        <button type="button" class="chip-choice" data-v="good">Mostly good</button>
+        <button type="button" class="chip-choice" data-v="tired">Often tired</button>
+        <button type="button" class="chip-choice" data-v="very-tired">Constantly drained</button>
+      </div>
+    </div>
+    <div class="q-row">
+      <label class="q-label">Family history? <span style="font-weight:500;color:var(--ink-faint)">(optional)</span></label>
+      <div class="choice-row" id="familyRow">
+        <button type="button" class="chip-choice" data-v="diabetes">Diabetes</button>
+        <button type="button" class="chip-choice" data-v="cardiac">Heart disease</button>
+        <button type="button" class="chip-choice" data-v="thyroid">Thyroid</button>
+        <button type="button" class="chip-choice" data-v="none">None</button>
+      </div>
+    </div>
+    <div class="q-row">
+      <label class="q-label">Last full checkup?</label>
+      <div class="choice-row" id="lastRow">
+        <button type="button" class="chip-choice" data-v="recent">Within a year</button>
+        <button type="button" class="chip-choice" data-v="old">1–3 years ago</button>
+        <button type="button" class="chip-choice" data-v="never">Never / can't remember</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STEP 4: RESULTS ============ -->
+  <section class="wpanel" id="wp4" style="margin-top:1.2rem;display:none">
+    <div class="card ai-feature-card" style="background:linear-gradient(135deg,rgba(0,51,102,.08),rgba(107,27,71,.07))">
+      <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.3rem">
+        <div class="fab-ai" style="position:static;width:40px;height:40px;font-size:1.1rem">✦</div>
+        <div><h3 style="margin:0">Your personalised suggestions</h3>
+        <small style="color:var(--ink-muted)" id="recSummary"></small></div>
+      </div>
+    </div>
+    <p class="disclaimer" style="margin:.9rem 0">⚕️ These suggestions are generated from your answers for
+    informational purposes only. They are <b>not a medical diagnosis</b>. Please consult a qualified doctor
+    before making health decisions.</p>
+    <div class="grid grid-3" id="recGrid"></div>
+    <div style="display:flex;gap:.6rem;margin-top:1.2rem;flex-wrap:wrap">
+      <a class="btn btn-primary btn-lg btn-glow" href="booking.html" onclick="sendRecsToBooking()">Book selected tests →</a>
+      <button class="btn btn-ghost btn-lg" onclick="restartWizard()">Start over</button>
+      <a class="btn btn-maroon btn-lg" href="ai-assistant.html">Ask Vanaja AI about these</a>
+    </div>
+  </section>
+
+  <!-- nav -->
+  <div style="display:flex;gap:.7rem;margin-top:1.4rem" id="wizNav">
+    <button class="btn btn-ghost" id="backBtn" onclick="wizNav(-1)" disabled>← Back</button>
+    <button class="btn btn-primary btn-lg" id="nextBtn" onclick="wizNav(1)">Continue →</button>
+  </div>
+
+  <p class="disclaimer" style="margin-top:1rem">AI-generated information is for educational and informational purposes
+  and does not replace advice, diagnosis, or treatment from a qualified healthcare professional.</p>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Book');
+
+/* ================= STATE ================= */
+const state = { goal:null, age:null, sex:null, cond:null, energy:null, family:null, last:null };
+let step = 1;
+
+/* multi-select groups are single-pick here except conditions (multi allowed via toggle) */
+function wireSingle(groupId, key){
+  const row = document.getElementById(groupId);
+  if(!row) return;
+  row.addEventListener('click', e=>{
+    const b = e.target.closest('.chip-choice'); if(!b) return;
+    row.querySelectorAll('.chip-choice').forEach(c=>c.classList.remove('sel'));
+    b.classList.add('sel'); state[key]=b.dataset.v;
+  });
+}
+wireSingle('sexRow','sex'); wireSingle('condRow','cond'); wireSingle('energyRow','energy');
+wireSingle('familyRow','family'); wireSingle('lastRow','last');
+
+document.getElementById('goalGrid').addEventListener('click', e=>{
+  const b=e.target.closest('.goal-card'); if(!b) return;
+  document.querySelectorAll('.goal-card').forEach(c=>c.classList.remove('sel'));
+  b.classList.add('sel'); state.goal=b.dataset.goal;
+});
+
+/* ================= RECOMMENDATION ENGINE =================
+   Rule-based scoring: each catalogue item carries rules that
+   add points based on questionnaire answers. Highest scores,
+   with reasons, become the suggestions. Purely informational. */
+const RULES = [
+  { ref:'fullbody', type:'package',
+    when:s=>['wellness','senior'].includes(s.goal)||s.last==='never'||s.last==='old'||s.age>=30,
+    pts:s=>(['wellness','senior'].includes(s.goal)?3:0)+(s.last!=='recent'?2:0)+(s.age>=30&&s.age<60?1:0),
+    why:'A broad panel gives you a complete baseline — especially valuable since it\u2019s been a while or it\u2019s your first full checkup.' },
+  { ref:'diabetes', type:'package',
+    when:s=>['diabetes'].includes(s.goal)||s.cond==='diabetes'||s.family==='diabetes'||s.age>=35,
+    pts:s=>(s.goal==='diabetes'?3:0)+(s.cond==='diabetes'?3:0)+(s.family==='diabetes'?2:0)+(s.age>=35?1:0),
+    why:'Sugar monitoring is commonly advised from the mid-30s, and more so with personal or family diabetes history.' },
+  { ref:'thyroidpkg', type:'package',
+    when:s=>['thyroid'].includes(s.goal)||s.cond==='thyroid'||s.family==='thyroid'||(s.sex==='female'&&s.energy!=='good'),
+    pts:s=>(s.goal==='thyroid'?3:0)+((s.cond==='thyroid'||s.family==='thyroid')?3:0)+(s.energy==='tired'||s.energy==='very-tired'?1:0),
+    why:'Tiredness alongside thyroid history is a pattern doctors often like to rule in or out with a simple panel.' },
+  { ref:'cbp', type:'test',
+    when:s=>s.energy==='tired'||s.energy==='very-tired'||s.cond==='anemia',
+    pts:s=>(s.energy==='very-tired'?2:s.energy==='tired'?1:0)+(s.cond==='anemia'?3:0),
+    why:'A CBC screens for anemia and infection markers — a common first step when energy is low.' },
+  { ref:'lpt', type:'test',
+    when:s=>['cardiac','men','women'].includes(s.goal)||(s.age>=35),
+    pts:s=>(['cardiac','men','women'].includes(s.goal)?3:0)+(s.age>=40?2:s.age>=35?1:0),
+    why:'Cholesterol screening supports cardiac-risk awareness and is routinely advised from the mid-30s.' },
+  { ref:'vtd', type:'test',
+    when:s=>['vitamin'].includes(s.goal)||s.energy!=='good',
+    pts:s=>(s.goal==='vitamin'?3:0)+(s.energy==='very-tired'?2:0),
+    why:'Vitamin D deficiency is very common in India and frequently contributes to fatigue.' },
+];
+
+/* resolve catalogue refs to names/prices from app.js data */
+function itemFor(r){
+  if (r.type==='package'){ const p=PACKAGES.find(x=>x.id===r.ref||x.id==='fullbody'&&r.ref==='fullbody');
+    const pk=PACKAGES.find(x=>x.id===r.ref);
+    return pk?{name:pk.name,sub:`Package · ${pk.testsCount} tests`,price:pk.currentPrice,orig:pk.originalPrice,href:`booking.html?package=${pk.id}`}:null; }
+  const t=TESTS.find(x=>x.id===r.ref);
+  return t?{name:t.name,sub:t.cat+' · Test',price:t.price,orig:null,href:`booking.html?test=${t.id}`}:null;
+}
+
+function recommend(){
+  const scored=[];
+  for (const r of RULES){
+    let s=r.pts(state);
+    if (!r.when(state)) continue;
+    if (s<=0) continue;
+    scored.push({rule:r,score:s,item:itemFor(r)});
+  }
+  scored.sort((a,b)=>b.score-a.score);
+  return scored.slice(0,4).filter(x=>x.item);
+}
+
+/* ================= WIZARD NAV ================= */
+function wizNav(dir){
+  /* validate current step before advancing */
+  if (dir===1 && !validateStep()) return;
+  if (dir===1 && step===3){ renderResults(); }
+  step=Math.min(4,Math.max(1,step+dir));
+  document.querySelectorAll('.wpanel').forEach((p,i)=>p.style.display=i===step-1?'block':'none');
+  document.querySelectorAll('.wstep').forEach((w,i)=>{
+    w.classList.toggle('active',i===step-1); w.classList.toggle('done',i<step-1);
+  });
+  document.getElementById('wizFill').style.width=(step*25)+'%';
+  document.getElementById('backBtn').disabled=step===1;
+  const nb=document.getElementById('nextBtn');
+  if(step===4){ nb.style.display='none'; }
+  else { nb.style.display='inline-flex'; nb.textContent= step===3?'See my suggestions →':'Continue →'; }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function validateStep(){
+  if(step===1 && !state.goal){ toast('Pick what brings you in today 🙂'); return false; }
+  if(step===2){
+    state.age=+document.getElementById('ageInput').value||null;
+    if(!state.age||state.age<1||state.age>120){ toast('Please enter a valid age'); return false; }
+  }
+  return true;
+}
+function renderResults(){
+  const recs=recommend();
+  const g=document.getElementById('recGrid');
+  g.innerHTML = recs.map((r,i)=>`
+    <article class="card card-hover rec-card ${i===0?'primary-rec':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem">
+        ${i===0?'<span class="match-pill">BEST MATCH</span>':`<span class="match-pill" style="background:rgba(0,51,102,.10);color:var(--navy-600)">RECOMMENDED</span>`}
+        <span class="badge-save">${r.item.orig?`Save ${Math.round((r.item.orig-r.item.price)/r.item.orig*100)}%`:''}</span>
+      </div>
+      <h4 style="margin:.6rem 0 .2rem">${r.item.name}</h4>
+      <small style="color:var(--ink-faint)">${r.item.sub}</small>
+      <p class="reason-line">${r.rule.why}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:auto">
+        <span class="price">${fmtINR(r.item.price)}</span>
+        <a class="btn btn-primary btn-sm" href="${r.item.href}">Book</a>
+      </div>
+    </article>`).join('')
+    || '<p style="color:var(--ink-muted)">No strong matches found — try the Full Body Checkup below or ask Vanaja AI.</p>';
+  document.getElementById('recSummary').textContent =
+    `${state.age} yrs · ${state.goal} focus · ${recs.length} suggestion${recs.length!==1?'s':''}`;
+  /* stash for booking hand-off */
+  sessionStorage.setItem('vd_recs', JSON.stringify(recs.map(r=>({id:r.rule.ref,type:r.rule.type}))));
+}
+function sendRecsToBooking(){
+  const cart=(JSON.parse(sessionStorage.getItem('vd_recs')||'[]'));
+  sessionStorage.setItem('vd_cart', JSON.stringify(cart));
+}
+function restartWizard(){
+  Object.keys(state).forEach(k=>state[k]=null);
+  document.querySelectorAll('.sel').forEach(e=>e.classList.remove('sel'));
+  document.getElementById('ageInput').value='';
+  step=1; wizNav(-1);
+}
+document.getElementById('ageInput').addEventListener('keydown',e=>{ if(e.key==='Enter') wizNav(1); });
+
+/* deep link ?goal=xxx preselects */
+const pre=new URLSearchParams(location.search).get('goal');
+if(pre){ const b=document.querySelector(`.goal-card[data-goal="${pre}"]`); if(b)b.click(); }
+</script>
+</body>
+</html>

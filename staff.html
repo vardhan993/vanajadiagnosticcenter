@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Portal — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+body{background:var(--navy-900);}
+.portal{max-width:1180px;margin-inline:auto;padding:1.2rem 1rem 3rem;}
+/* role picker */
+.roles{display:flex;gap:.5rem;flex-wrap:wrap;margin:.9rem 0 1.2rem;}
+.role-btn{cursor:pointer;border:1.5px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);
+  color:#fff;border-radius:var(--r-full);padding:.55rem 1.15rem;font-weight:800;font-size:.86rem;}
+.role-btn.on{background:var(--grad-accent);border-color:transparent;box-shadow:var(--glow-maroon);}
+.pane{display:none;} .pane.on{display:block;animation:fadeUp .25s var(--ease);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.stat{background:var(--surface);border-radius:var(--r-lg);padding:1rem;border-left:4px solid var(--maroon-600);}
+.stat b{font-size:1.6rem;display:block;color:var(--navy-700);}
+[data-theme="dark"] .stat b{color:var(--navy-300);}
+.stat small{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-muted);}
+
+.trow{display:flex;justify-content:space-between;align-items:center;gap:.7rem;padding:.65rem .2rem;
+  border-bottom:1px dashed var(--border);font-size:.88rem;}
+.trow:last-child{border-bottom:none;}
+
+.bar{height:9px;border-radius:5px;background:linear-gradient(90deg,var(--navy-500),var(--maroon-600));}
+.sig-box{border:1.5px dashed var(--maroon-400);border-radius:var(--r-lg);padding:.8rem;text-align:center;
+  font-family:'Segoe Script','Brush Script MT',cursive;font-size:1.15rem;color:var(--maroon-600);}
+.flag{display:inline-block;font-size:.66rem;font-weight:800;padding:.12rem .55rem;border-radius:var(--r-full);}
+.f-high{background:rgba(179,38,30,.14);color:#B3261E;} .f-low{background:rgba(179,106,0,.16);color:#B36A00;}
+.f-ok{background:rgba(30,158,106,.14);color:#1E7A54;}
+</style>
+</head>
+<body>
+<div class="portal">
+
+  <header style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.7rem;color:#fff">
+    <div style="display:flex;gap:.6rem;align-items:center">
+      <img src="assets/img/logo.png" alt="Vanaja" style="height:42px;background:#fff;border-radius:9px;padding:.15rem">
+      <div><b>Staff Portal</b><br><small style="opacity:.75">Internal Vanaja AI Operating System · Role-based access · Audit logged</small></div>
+    </div>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <span class="chip">● LIVE</span>
+      <button class="icon-btn" onclick="toggleTheme()" aria-label="Toggle dark mode">◐</button>
+      <a class="btn btn-sm btn-ghost" style="color:#fff" href="index.html">Patient site ↗</a>
+    </div>
+  </header>
+
+  <!-- ============ ROLE SWITCHER ============ -->
+  <div class="roles" id="roleBar"></div>
+
+  <!-- ================= RECEPTION ================= -->
+  <section class="pane on" id="pane-reception">
+    <div class="grid grid-4">
+      <div class="stat"><b>64</b><small>Walk-ins today</small></div>
+      <div class="stat"><b>31</b><small>Registered now</small></div>
+      <div class="stat"><b>₹41,200</b><small>Collected</small></div>
+      <div class="stat"><b>₹3,850</b><small>Pending payment</small></div>
+    </div>
+    <section class="card ai-glow" style="margin-top:1rem">
+      <h3 style="margin-bottom:.5rem">➕ Walk-in registration</h3>
+      <div class="grid grid-3">
+        <div class="field"><label>Name</label><input class="input" id="regName" placeholder="Patient full name"></div>
+        <div class="field"><label>Age / Sex</label><input class="input" id="regAge" placeholder="e.g. 45 / M"></div>
+        <div class="field"><label>Phone</label><input class="input" id="regPhone" placeholder="+91"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top:.7rem" onclick="registerWalkin()">Register & generate UHID</button>
+    </section>
+    <div class="grid grid-2" style="margin-top:1rem">
+      <section class="card">
+        <h3>🔎 Patient search</h3>
+        <form onsubmit="return searchPt(event)" style="display:flex;gap:.5rem">
+          <input class="input" id="ptQ" placeholder="Name, phone or UHID…">
+          <button class="btn btn-primary">Search</button>
+        </form>
+        <div id="ptResults" style="margin-top:.6rem"></div>
+      </section>
+      <section class="card">
+        <h3>🧾 Test orders & payment status</h3>
+        <div id="orderList"></div>
+      </section>
+    </div>
+    <section class="card" style="margin-top:1rem">
+      <h3>📅 Appointment management</h3>
+      <div class="table-wrap" style="overflow-x:auto"><table class="table">
+        <thead><tr><th>Time</th><th>Patient</th><th>Tests</th><th>Mode</th><th>Status</th><th></th></tr></thead>
+        <tbody id="apptBody"></tbody>
+      </table></div>
+    </section>
+  </section>
+
+  <!-- ================= PHLEBOTOMIST ================= -->
+  <section class="pane" id="pane-phlebo">
+    <div class="grid grid-4">
+      <div class="stat"><b>6</b><small>Assigned today</small></div>
+      <div class="stat"><b>4</b><small>Completed</small></div>
+      <div class="stat"><b>2</b><small>Remaining stops</small></div>
+      <div class="stat"><b>18 min</b><small>Saved via AI routing</small></div>
+    </div>
+    <section class="card ai-glow" style="margin-top:1rem">
+      <h3 style="margin-bottom:.4rem">🗺️ Today's AI-optimised route</h3>
+      <div id="routeMini"></div>
+      <a class="btn btn-maroon btn-sm" href="admin/phlebo.html" style="margin-top:.7rem">Open full field app →</a>
+    </section>
+    <section class="card" style="margin-top:1rem">
+      <h3>✅ Patient verification & collection status</h3>
+      <div id="phleboStatus"></div>
+    </section>
+  </section>
+
+  <!-- ================= LAB TECHNICIAN ================= -->
+  <section class="pane" id="pane-lab">
+    <div class="grid grid-4">
+      <div class="stat"><b>27</b><small>In processing</small></div>
+      <div class="stat"><b>96</b><small>Received today</small></div>
+      <div class="stat"><b>3</b><small>Awaiting quality review</small></div>
+      <div class="stat"><b>99.2%</b><small>First-pass QC rate</small></div>
+    </div>
+    <section class="card" style="margin-top:1rem">
+      <h3>📥 Sample received → processing board</h3>
+      <div class="grid grid-3" id="labBoard"></div>
+    </section>
+    <section class="card" style="margin-top:1rem">
+      <h3>⌨️ Result entry / import</h3>
+      <div class="grid grid-2">
+        <div class="field"><label>Sample barcode</label>
+          <input class="input" id="bcIn" placeholder="VDC-260821-RM-HBA1C-LIP-001" value="VDC-260821-RM-HBA1C-LIP-001"></div>
+        <div class="field"><label>HbA1c result (%)</label><input class="input" id="resIn" value="5.8"></div>
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:.7rem;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" onclick="enterResult()">Save result</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('Analyzer CSV import queued (demo)')">📥 Import from analyzer</button>
+      </div>
+      <p style="font-size:.78rem;color:var(--ink-faint);margin:.5rem 0 0">Results above reference ranges are auto-flagged for pathologist review.</p>
+    </section>
+    <section class="card" style="margin-top:1rem">
+      <h3>🔬 Quality review workflow</h3>
+      <div id="qcList"></div>
+    </section>
+  </section>
+
+  <!-- ================= PATHOLOGIST ================= -->
+  <section class="pane" id="pane-patho">
+    <div class="grid grid-4">
+      <div class="stat"><b>6</b><small>In review queue</small></div>
+      <div class="stat"><b>2</b><small>Critical flags</small></div>
+      <div class="stat"><b>112</b><small>Approved this week</small></div>
+      <div class="stat"><b>42 min</b><small>Avg review time</small></div>
+    </div>
+    <section class="card" style="margin-top:1rem">
+      <h3>🚩 Review queue — flagged results first</h3>
+      <div id="pathoQueue"></div>
+    </section>
+    <section class="card" style="margin-top:1rem">
+      <h3>✍️ Approve & digital signature</h3>
+      <div class="grid grid-2">
+        <div class="card" style="background:var(--surface-2)">
+          <b style="font-size:.92rem">CBC · Ramaiah M. (UHID-88412)</b>
+          <ul style="list-style:none;padding:0;margin:.5rem 0;font-size:.85rem;line-height:1.9">
+            <li>Hb 10.2 g/dL <span class="flag f-low">LOW</span></li>
+            <li>WBC 11,400/µL <span class="flag f-high">HIGH</span></li>
+            <li>Platelets 2.4 L/µL <span class="flag f-ok">NORMAL</span></li>
+          </ul>
+          <label style="display:flex;gap:.45rem;font-size:.84rem;align-items:center">
+            <input type="checkbox" id="sigChk"> I have reviewed all values and approve this report.
+          </label>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.7rem;justify-content:center">
+          <div class="sig-box" id="sigPad">Dr. Anitha R., MD (Path)</div>
+          <small style="color:var(--ink-faint);text-align:center">Digital signature · license MD-44821 · timestamped & tamper-sealed</small>
+          <button class="btn btn-primary" onclick="approveReport()">Approve with signature</button>
+        </div>
+      </div>
+    </section>
+  </section>
+
+  <!-- ================= MANAGEMENT ================= -->
+  <section class="pane" id="pane-mgmt">
+    <div class="grid grid-4">
+      <div class="stat"><b>₹18.4L</b><small>Revenue · Aug MTD</small></div>
+      <div class="stat"><b>+11%</b><small>Growth vs Jul</small></div>
+      <div class="stat"><b>12,480</b><small>Active patients</small></div>
+      <div class="stat"><b>4.8★</b><small>Patient rating</small></div>
+    </div>
+    <div class="grid grid-2" style="margin-top:1rem">
+      <section class="card">
+        <h3>💰 Revenue analytics — last 8 weeks</h3>
+        <svg viewBox="0 0 320 110" style="width:100%">
+          <defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(139,46,95,.35)"/><stop offset="1" stop-color="rgba(139,46,95,0)"/></linearGradient></defs>
+          <path d="M10 80 L52 70 L94 76 L136 58 L178 50 L220 40 L262 34 L310 20 L310 105 L10 105Z" fill="url(#mg)"/>
+          <path d="M10 80 L52 70 L94 76 L136 58 L178 50 L220 40 L262 34 L310 20" fill="none" stroke="#8B2E5F" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <small style="color:var(--ink-muted)">Weekly revenue trend · truth-checked offers driving package attach-rate up 9%</small>
+      </section>
+      <section class="card">
+        <h3>🧪 Test popularity</h3>
+        <div id="popBars"></div>
+      </section>
+    </div>
+    <div class="grid grid-2" style="margin-top:1rem">
+      <section class="card">
+        <h3>🏥 Branch performance</h3>
+        <div id="branchPerf"></div>
+      </section>
+      <section class="card">
+        <h3>👥 Staff productivity & collection analytics</h3>
+        <div id="staffPerf"></div>
+      </section>
+    </div>
+    <a class="btn btn-maroon" style="margin-top:1rem" href="admin/index.html">Open full Live Dashboard →</a>
+  </section>
+
+  <p class="disclaimer" style="margin-top:1.6rem;text-align:center">All access is role-restricted, audit-logged and
+  consent-aware. Clinical decisions remain with qualified professionals.</p>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script>
+applyPrefs();
+const ROLES=[['reception','🏥 Reception'],['phlebo','🛵 Phlebotomist'],['lab','🧪 Lab Technician'],['patho','🔬 Pathologist'],['mgmt','📈 Management']];
+document.getElementById('roleBar').innerHTML=ROLES.map(([id,l],i)=>
+  `<button class="role-btn ${i===0?'on':''}" onclick="showRole('${id}',this)">${l}</button>`).join('');
+function showRole(id,btn){
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('on')); if(btn)btn.classList.add('on');
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pane-'+id).classList.add('on');
+}
+
+const toastMsg=m=>toast(m);
+function row(l,r){return `<div class="trow"><span>${l}</span><span style="text-align:right">${r}</span></div>`;}
+
+/* ---------- RECEPTION ---------- */
+const PTS=[
+ {id:'UHID-88412',n:'Ramaiah M.',a:68,p:'+91 90000 11580',last:'Lipid Profile · May'},
+ {id:'UHID-90127',n:'Sujatha D.',a:63,p:'+91 90000 44217',last:'CBC · Jun 2025'},
+ {id:'UHID-91503',n:'Ananya R.',a:29,p:'+91 90000 77341',last:'Thyroid · Aug'},
+];
+function searchPt(e){
+  e.preventDefault();
+  const q=document.getElementById('ptQ').value.toLowerCase();
+  const hits=PTS.filter(p=>!q||p.n.toLowerCase().includes(q)||p.p.includes(q)||p.id.toLowerCase().includes(q));
+  document.getElementById('ptResults').innerHTML=hits.map(p=>row(
+    `<b>${p.n}</b> <small style="color:var(--ink-muted)">${p.id} · ${p.a}y</small>`,
+    `<small>${p.last}</small> <button class="btn btn-maroon btn-sm" onclick="newOrder('${p.n}')">New order</button>`
+  )).join('')||'<p style="color:var(--ink-muted)">No match — register as walk-in.</p>';
+  return false;
+}
+function newOrder(n){ toast(`New test order started for ${n}`); }
+function registerWalkin(){
+  const n=document.getElementById('regName').value.trim();
+  toast(n?`${n} registered ✓ UHID-${Math.floor(90000+Math.random()*9999)} generated`:'Enter patient name');
+}
+const ORDERS=[
+ ['W-1041 · Ramaiah M.','Lipid Profile + HbA1c','<span class="flag f-ok">PAID</span>'],
+ ['W-1042 · Sujatha D.','Full Body Checkup','<span class="flag f-low">₹1,500 DUE</span>'],
+ ['W-1043 · Irfan M.','CBC','<span class="flag f-ok">PAID</span>'],
+];
+document.getElementById('orderList').innerHTML=ORDERS.map(o=>row(`${o[0]}<br><small style="color:var(--ink-muted)">${o[1]}</small>`,o[2])).join('');
+const APPTS=[
+ ['07:30','Ramaiah M.','HbA1c+Lipid','🏠 Home','<span class="flag f-ok">DONE</span>'],
+ ['09:15','Sujatha D.','Thyroid','🏥 Walk-in','<span class="chip">Checked in</span>'],
+ ['10:00','Irfan M.','CBC','🏥 Walk-in','<span class="chip">Waiting</span>'],
+ ['16:00','Lakshmi P.','Vitamin D','🏠 Home','<span class="chip">Scheduled</span>'],
+];
+document.getElementById('apptBody').innerHTML=APPTS.map(a=>`<tr><td>${a[0]}</td><td><b>${a[1]}</b></td><td>${a[2]}</td><td>${a[3]}</td><td>${a[4]}</td>
+ <td><button class="btn btn-ghost btn-sm" onclick="toast('Reschedule options opened (demo)')">Reschedule</button></td></tr>`).join('');
+
+/* ---------- PHLEBO ---------- */
+const ROUTE=[['07:30','Ramaiah M. · Kavadiguda',true],['08:20','Sujatha D. · Hasmathpet',false],['08:50','Ananya R. · Hasmathpet',false]];
+document.getElementById('routeMini').innerHTML=ROUTE.map(r=>row(
+ `${r[2]?'✅':`<b>${r[0]}</b>`} ${r[1]}`, r[2]?'<span class="flag f-ok">COLLECTED</span>':'<span class="chip">Pending</span>')).join('')
+ +row('<i>Route grouped by area cluster · traffic-adjusted ETAs</i>','');
+document.getElementById('phleboStatus').innerHTML=[
+ ['Ramaiah M.','OTP verified · barcode VDC-…-001 sealed','f-ok','COLLECTED'],
+ ['Lakshmi P.','Awaiting arrival — OTP will be requested','f-low','IN TRANSIT'],
+].map(x=>row(`<b>${x[0]}</b><br><small style="color:var(--ink-muted)">${x[1]}</small>`,`<span class="flag ${x[2]}">${x[3]}</span>`)).join('');
+
+/* ---------- LAB ---------- */
+const LAB=[['Received',12,'f-ok'],['Processing',27,'f-low'],['Ready for QC',3,'f-high']];
+document.getElementById('labBoard').innerHTML=LAB.map(([s,n,f])=>`
+ <div class="card" style="background:var(--surface-2)"><b>${n}</b><br><span class="flag ${f}">${s.toUpperCase()}</span></div>`).join('');
+const QC=[['CBC batch #B-77','All controls within range','f-ok','PASS'],
+ ['Lipid batch #B-78','One control drift — rerun advised','f-low','REVIEW']];
+document.getElementById('qcList').innerHTML=QC.map(q=>row(
+ `<b>${q[0]}</b><br><small style="color:var(--ink-muted)">${q[1]}</small>`,
+ `<span class="flag ${q[2]}">${q[3]}</span> <button class="btn btn-ghost btn-sm" onclick="toast('QC action recorded (demo)')">${q[3]==='PASS'?'File':'Rerun'}</button>`)).join('');
+function enterResult(){
+  const v=document.getElementById('resIn').value;
+  const flag=parseFloat(v)>=5.7?' — flagged HIGH-band, routed to pathologist ✓':' — within range';
+  toast(`Result ${v}% saved for ${document.getElementById('bcIn').value.slice(0,18)}…${flag}`);
+}
+
+/* ---------- PATHOLOGIST ---------- */
+const QUEUE=[
+ ['HbA1c 6.9% · Srinivas K.','Diabetes-range value — verify with FBS',true],
+ ['Hb 10.2 g/dL · Ramaiah M.','Below range + symptomatic note attached',true],
+ ['TSH 3.1 mIU/L · Padmavathi','Normal panel — routine sign-off',false],
+ ['Lipid LDL 108 · Irfan M.','Normal panel — routine sign-off',false],
+];
+document.getElementById('pathoQueue').innerHTML=QUEUE.map(q=>row(
+ `<b>${q[0]}</b><br><small style="color:var(--ink-muted)">${q[1]}</small>`,
+ `<span class="flag ${q[2]?'f-high':'f-ok'}">${q[2]?'CRITICAL FLAG':'ROUTINE'}</span>
+  <button class="btn btn-maroon btn-sm" onclick="openSig()">Review</button>`)).join('');
+function openSig(){ document.getElementById('sigChk').scrollIntoView({behavior:'smooth',block:'center'});
+  document.querySelector('#pane-patho .card:last-of-type').style.boxShadow='var(--glow-maroon)';
+  setTimeout(()=>document.querySelector('#pane-patho .card:last-of-type').style.boxShadow='',1600); }
+function approveReport(){
+  if(!document.getElementById('sigChk').checked){ toast('Please confirm you have reviewed all values'); return; }
+  toast('Report approved & digitally signed ✓ Patient notified');
+}
+
+/* ---------- MANAGEMENT ---------- */
+const POP=[['CBC',51],['Full Body Checkup',34],['Diabetes Care Pkg',22],['Thyroid Profile',19],['Lipid Profile',17]];
+const pmx=POP[0][1];
+document.getElementById('popBars').innerHTML=POP.map(([t,n])=>`
+ <div class="area-row"><span style="width:150px;font-size:.87rem">${t}</span>
+ <span class="bar" style="width:${Math.round(n/pmx*100)*.55}%"></span><b style="margin-left:auto">${n}</b></div>`).join('');
+const BR=[['Kavadiguda Main','₹8.9L',48],['Hasmathpet','₹6.1L',33],['Padmashali Colony','₹3.4L',19]];
+document.getElementById('branchPerf').innerHTML=BR.map(([b,r,s])=>row(`<b>${b}</b><br><small>${s}% of volume</small>`,`<b>${r}</b> MTD`)).join('');
+const STAFF=[
+ ['Ravi Kumar (Phlebo)','18/18 collections · 4.9★ route efficiency','f-ok','ON TARGET'],
+ ['Tech S. Prasad','96 samples processed · 99.2% QC pass','f-ok','ON TARGET'],
+ ['Dr. Anitha R.','112 reports signed · avg 42 min','f-ok','ON TARGET'],
+];
+document.getElementById('staffPerf').innerHTML=STAFF.map(s=>row(
+ `<b>${s[0]}</b><br><small style="color:var(--ink-muted)">${s[1]}</small>`,`<span class="flag ${s[2]}">${s[3]}</span>`)).join('')
+ +row('<i>Collections analytics: home pickups up 22% MoM · avg draw-to-report 5.2 h</i>','');
+</script>
+</body>
+</html>

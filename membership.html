@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vanaja Health+ — Membership Plans</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+/* ===== Tier cards ===== */
+.plan-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1rem; align-items:stretch; }
+.plan-card { position:relative; display:flex; flex-direction:column; border-radius:var(--r-xl);
+  border:1.5px solid var(--border); background:var(--surface); padding:1.5rem 1.3rem;
+  transition:transform var(--t-med) var(--ease), box-shadow var(--t-med); }
+.plan-card:hover { transform:translateY(-6px); box-shadow:var(--shadow-3); }
+.plan-card.featured { border-color:var(--maroon-600); box-shadow:var(--glow-maroon), var(--shadow-2);
+  background:linear-gradient(160deg,rgba(107,27,71,.06),rgba(0,51,102,.04) 55%,var(--surface)); }
+.plan-badge { position:absolute; top:-.75rem; left:50%; transform:translateX(-50%);
+  background:var(--grad-accent); color:#fff; font-size:.68rem; font-weight:800; letter-spacing:.08em;
+  padding:.28rem .95rem; border-radius:var(--r-full); white-space:nowrap; }
+.plan-name { font-size:1.15rem; font-weight:800; margin:.2rem 0 .1rem; }
+.plan-tag { font-size:.82rem; color:var(--ink-muted); min-height:2.4em; }
+.plan-price { display:flex; align-items:baseline; gap:.4rem; margin:.9rem 0 .2rem; }
+.plan-price .amt { font-size:2rem; font-weight:800; }
+.plan-price .per { font-size:.85rem; color:var(--ink-faint); }
+.plan-later { font-size:.72rem; color:var(--ink-faint); font-style:italic; margin-bottom:.9rem; }
+.plan-feats { list-style:none; padding:0; margin:.9rem 0 1.2rem; flex:1; }
+.plan-feats li { padding:.32rem 0 .32rem 1.45rem; position:relative; font-size:.89rem; line-height:1.5; }
+.plan-feats li::before { content:"✓"; position:absolute; left:0; color:#1E9E6A; font-weight:800; }
+.plan-feats li.plus::before { color:var(--maroon-600); content:"✦"; }
+.plan-feats li.dim { opacity:.45; }
+.plan-feats li.dim::before { content:"✕"; color:var(--ink-faint); }
+
+/* current plan state */
+.current-pill { display:inline-block; background:var(--navy-50); color:var(--navy-700);
+  font-size:.7rem; font-weight:800; border-radius:var(--r-full); padding:.18rem .7rem; margin-bottom:.5rem; }
+[data-theme="dark"] .current-pill { background:rgba(21,92,153,.25); color:var(--navy-300); }
+
+/* comparison table */
+.cmp-table th { font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); text-align:center; }
+.cmp-table td { padding:.6rem .5rem; border-bottom:1px solid var(--border); font-size:.88rem; }
+.cmp-table td.yes { color:#1E9E6A; font-weight:800; text-align:center; }
+.cmp-table td.no { color:var(--ink-faint); text-align:center; }
+.cmp-table tr:last-child td { border-bottom:none; }
+.cmp-table td:first-child { font-weight:600; }
+.cmp-table .col-hl { background:linear-gradient(180deg,rgba(107,27,71,.07),transparent); }
+
+/* upsell banners in-app */
+.gated { position:relative; overflow:hidden; }
+.gated-blur { filter:blur(3px); pointer-events:none; user-select:none; }
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="eyebrow">Membership</div>
+  <div class="section-head"><h1>Vanaja Health+</h1></div>
+  <p style="max-width:46rem;color:var(--ink-muted)">One membership for your whole family's diagnostics —
+  digital reports, AI explanations, trend tracking and priority care.
+  <b>Benefits and pricing are placeholders and can be finalised later.</b></p>
+
+  <!-- ============ TIERS ============ -->
+  <div class="plan-grid" id="planGrid"></div>
+
+  <!-- ============ COMPARISON ============ -->
+  <section class="card" style="margin-top:1.8rem">
+    <h3>Compare every benefit</h3>
+    <div class="table-wrap" style="overflow-x:auto;margin-top:.6rem">
+      <table class="table cmp-table" style="width:100%;min-width:520px">
+        <thead><tr><th style="text-align:left">Benefit</th><th>Free</th><th class="col-hl">Health+</th><th>Premium</th></tr></thead>
+        <tbody id="cmpBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ HOW IT WORKS / NOTES ============ -->
+  <div class="grid grid-2" style="margin-top:1.4rem;align-items:start">
+    <section class="card">
+      <h3>What unlocks when</h3>
+      <div class="timeline">
+        <div class="timeline-item"><b>Free — from day one</b><br><span style="font-size:.86rem;color:var(--ink-muted)">Digital reports, booking, basic history. Everything a first-time patient needs.</span></div>
+        <div class="timeline-item"><b>Health+ — the family tier</b><br><span style="font-size:.86rem;color:var(--ink-muted)">Adds family profiles with consent controls, AI report explanations (EN/తెలుగు/हिंदी), trend tracking and health reminders.</span></div>
+        <div class="timeline-item"><b>Premium — power users &amp; elders</b><br><span style="font-size:.86rem;color:var(--ink-muted)">Advanced family dashboard, extended multi-year analysis, priority support line and exclusive package pricing.</span></div>
+      </div>
+    </section>
+    <section class="card">
+      <h3>Fair-use &amp; privacy promise</h3>
+      <ul style="list-style:none;padding:0;line-height:2;font-size:.88rem">
+        <li>🔐 Your records stay yours — export or delete anytime</li>
+        <li>🩺 AI features are informational only, never a diagnosis</li>
+        <li>👨‍👩‍👧 Family access is always consent-based &amp; audit-logged</li>
+        <li>📄 Final benefits &amp; pricing to be decided by Vanaja management</li>
+      </ul>
+    </section>
+  </div>
+
+  <p class="disclaimer" style="margin-top:1.2rem">AI-generated features included in memberships provide
+  educational information only and do not replace advice, diagnosis, or treatment from a qualified
+  healthcare professional.</p>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Profile');
+
+/* ================= PLANS (pricing placeholders) ================= */
+const PLANS=[
+ {id:'free', name:'Free', tag:'Everything for a first visit', price:'₹0', per:'forever', later:'',
+  feats:[
+   ['Digital reports (PDF vault)',1],
+   ['Basic report history',1],
+   ['Test & package booking',1],
+   ['Home collection booking',1],
+   ['Family profiles',0],
+   ['AI report explanations',0],
+   ['Trend tracking',0],
+   ['Health reminders',0]]},
+ {id:'plus', name:'Health+', tag:'For families who track health together', price:'₹—', per:'pricing TBD', later:'Final benefit list & price to be decided',
+  featured:true,
+  feats:[
+   ['Everything in Free',1],
+   ['Family profiles + consent controls',1,'plus'],
+   ['AI report explanations (EN · తెలుగు · हिंदी)',1,'plus'],
+   ['Trend tracking across reports',1,'plus'],
+   ['Predictive health trends (consent-based)',1,'plus'],
+   ['Health reminders & next-due alerts',1,'plus'],
+   ['Voice AI assistant',1,'plus'],
+   ['Extended historical analysis',0]]},
+ {id:'premium', name:'Premium', tag:'Complete care for elders & power users', price:'₹—', per:'pricing TBD', later:'Final benefit list & price to be decided',
+  feats:[
+   ['Everything in Health+',1],
+   ['Advanced family dashboard',1,'plus'],
+   ['Extended multi-year historical analysis',1,'plus'],
+   ['Priority support line',1,'plus'],
+   ['Exclusive member packages',1,'plus'],
+   ['Annual family health review',1,'plus']]}
+];
+
+/* current plan (demo): stored, default free */
+let current=localStorage.getItem('vd_plan')||'free';
+
+function featLi([txt,on,style]){
+  if(on) return `<li class="${style||''}">${txt}</li>`;
+  return `<li class="dim">${txt}</li>`;
+}
+function renderPlans(){
+  document.getElementById('planGrid').innerHTML=PLANS.map(p=>{
+    const isCur=current===p.id;
+    return `<article class="plan-card ${p.featured?'featured':''}">
+      ${p.featured?'<span class="plan-badge">MOST POPULAR</span>':''}
+      ${isCur?'<span class="current-pill">● YOUR CURRENT PLAN</span>':'<span style="display:block;height:1.6rem"></span>'}
+      <div class="plan-name">${p.name}</div>
+      <div class="plan-tag">${p.tag}</div>
+      <div class="plan-price"><span class="amt">${p.price}</span><span class="per">${p.per}</span></div>
+      ${p.later?`<div class="plan-later">${p.later}</div>`:'<div class="plan-later">&nbsp;</div>'}
+      <ul class="plan-feats">${p.feats.map(featLi).join('')}</ul>
+      ${isCur
+        ?'<button class="btn btn-ghost btn-lg" style="width:100%" disabled>Active ✓</button>'
+        :`<button class="btn ${p.featured?'btn-maroon':'btn-primary'} btn-lg btn-glow" style="width:100%" onclick="choosePlan('${p.id}')">${p.id==='free'?'Switch to Free':'Join '+p.name}</button>`}
+    </article>`;
+  }).join('');
+}
+function choosePlan(id){
+  const p=PLANS.find(x=>x.id===id);
+  if(id!=='free'){
+    toast(`${p.name} selected — billing comes online once pricing is finalised (demo)`);
+  } else toast('Switched to Free plan');
+  current=id; localStorage.setItem('vd_plan',id);
+  renderPlans(); renderCmp();
+}
+
+/* ================= COMPARISON TABLE ================= */
+const CMP=[
+ ['Digital reports',            '✓','✓','✓'],
+ ['Basic report history',       '✓','✓','✓'],
+ ['Test & home-collection booking','✓','✓','✓'],
+ ['Family profiles',            '—','✓','✓'],
+ ['AI report explanations',     '—','✓','✓'],
+ ['Trend tracking',             '—','✓','✓'],
+ ['Health reminders',           '—','✓','✓'],
+ ['Voice AI (Telugu)',          '—','✓','✓'],
+ ['Advanced family dashboard',  '—','—','✓'],
+ ['Extended historical analysis','—','—','✓'],
+ ['Priority support',           '—','—','✓'],
+ ['Exclusive packages',         '—','—','✓'],
+];
+function renderCmp(){
+  document.getElementById('cmpBody').innerHTML=CMP.map(r=>{
+    const cell=v=>v==='✓'?'<td class="yes">✓</td>':'<td class="no">—</td>';
+    const mark=i=>r[i]==='✓'?'yes-cell':'';
+    return `<tr><td>${r[0]}</td>${cell(r[1])}<td class="col-hl">${cell(r[2]).replace('class="','class="col-hl ')}</td>${cell(r[3])}</tr>`;
+  }).join('');
+}
+
+renderPlans(); renderCmp();
+</script>
+</body>
+</html>

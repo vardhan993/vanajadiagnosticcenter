@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Patients CRM — Vanaja Admin</title>
+<link rel="icon" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/theme.css">
+<style>
+.admin-layout { display:grid; grid-template-columns:230px 1fr; min-height:100vh; }
+@media (max-width:900px){ .admin-layout { grid-template-columns:1fr; } .sidenav{position:static!important;height:auto!important;} }
+.sidenav { background:var(--navy-900); color:var(--navy-200); position:sticky; top:0; height:100vh; padding:1rem .8rem; display:flex; flex-direction:column; gap:.2rem; }
+.sidenav a { display:flex; gap:.6rem; align-items:center; text-decoration:none; color:inherit; font-weight:700; font-size:.9rem; padding:.65rem .85rem; border-radius:var(--r-md); }
+.sidenav a:hover, .sidenav a[aria-current="page"] { background:rgba(255,255,255,.09); color:#fff; }
+
+.pf-row{display:flex;justify-content:space-between;align-items:center;padding:.55rem 0;border-bottom:1px dashed var(--border);font-size:.88rem;}
+.pf-row:last-child{border-bottom:none}
+.switch{position:relative;width:42px;height:23px;display:inline-block;flex:none}
+.switch input{opacity:0;width:100%;height:100%;margin:0;cursor:pointer;position:relative;z-index:1}
+.switch i{position:absolute;inset:0;border-radius:999px;background:var(--border);transition:background var(--t-fast);pointer-events:none}
+.switch i::after{content:"";position:absolute;top:2.5px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left var(--t-fast);box-shadow:var(--shadow-1)}
+.switch input:checked+i{background:var(--maroon-600)}
+.switch input:checked+i::after{left:21px}
+.mini-timeline{border-left:2px solid var(--maroon-300);margin-left:.4rem;padding-left:.9rem;}
+.mini-timeline div{padding:.28rem 0;font-size:.84rem;color:var(--ink-muted);}
+.mini-timeline b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidenav">
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem 1rem">
+      <img src="../assets/img/logo.png" alt="Vanaja" style="height:38px;background:#fff;border-radius:8px;padding:.15rem">
+      <b style="color:#fff;font-size:.9rem">Operations OS</b>
+    </div>
+    <a href="index.html">📊 Dashboard</a>
+    <a href="offers.html">🏷️ Packages & Offers</a>
+    <a href="patients.html" aria-current="page">🧑‍💼 Patients</a>
+    <a href="lab.html">🧪 Lab Workflow</a>
+    <a href="phlebo.html">🛵 Phlebotomist</a>
+    <a href="branches.html">🏥 Branches</a>
+    <div style="margin-top:auto;font-size:.78rem;padding:.6rem">Role: <b style="color:#fff">Reception / Admin</b></div>
+  </aside>
+
+  <main style="padding:1.6rem">
+    <header style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.7rem;margin-bottom:.4rem">
+      <h1 style="margin:0">Patient Management</h1>
+      <span class="chip">🔒 Audit-logged access</span>
+    </header>
+
+    <!-- SEARCH -->
+    <div style="display:flex;gap:.6rem;max-width:34rem;margin:1rem 0 1.3rem">
+      <input class="input" id="pSearch" placeholder="Search by name, phone or patient ID…" oninput="renderPatients()">
+      <button class="btn btn-primary" onclick="toast('Walk-in registration opens in Reception (demo)')">+ New patient</button>
+    </div>
+
+    <!-- PATIENTS TABLE -->
+    <div class="card" style="overflow-x:auto;padding:.5rem 1rem">
+      <table class="table" id="pTable">
+        <thead><tr><th>Patient</th><th>ID</th><th>Bookings</th><th>Last visit</th><th>Family account</th><th>Consent</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- ============ PATIENT 360 DETAIL ============ -->
+    <section class="card ai-glow" id="detailPanel" style="margin-top:1.3rem;display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem">
+        <h3 style="margin:0" id="dName">—</h3>
+        <button class="btn btn-ghost btn-sm" onclick="this.closest('section').style.display='none'">✕ Close</button>
+      </div>
+
+      <div class="grid grid-3" style="margin-top:1rem;align-items:start">
+        <!-- Booking history -->
+        <div>
+          <b style="font-size:.92rem">📅 Booking history</b>
+          <div class="mini-timeline" id="dBookings" style="margin-top:.45rem"></div>
+          <button class="btn btn-maroon btn-sm" style="margin-top:.6rem" onclick="toast('New booking started (demo)')">+ New booking</button>
+        </div>
+        <!-- Report history -->
+        <div>
+          <b style="font-size:.92rem">🗂️ Report history</b>
+          <div class="mini-timeline" id="dReports" style="margin-top:.45rem"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:.6rem" onclick="toast('All reports exported as PDF bundle (demo)')">⬇ Export all reports</button>
+        </div>
+        <!-- Consent & sharing -->
+        <div>
+          <b style="font-size:.92rem">🔐 Consent & sharing</b>
+          <p style="font-size:.76rem;color:var(--ink-faint);margin:.15rem 0 .35rem">Changes are audit-logged. Adults are SMS-notified.</p>
+          <div id="dConsent"></div>
+        </div>
+      </div>
+
+      <!-- Family account -->
+      <div style="margin-top:1.1rem">
+        <b style="font-size:.92rem">👨‍👩‍👧 Family account management</b>
+        <div id="dFamily" style="margin-top:.45rem"></div>
+      </div>
+
+      <!-- Appointments -->
+      <div style="margin-top:1.1rem">
+        <b style="font-size:.92rem">📅 Appointment management</b>
+        <div class="table-wrap" style="overflow-x:auto;margin-top:.4rem"><table class="table">
+          <thead><tr><th>Date · Time</th><th>Type</th><th>Tests</th><th>Status</th><th></th></tr></thead>
+          <tbody id="dAppts"></tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- ALL APPOINTMENTS -->
+    <section class="card" style="margin-top:1.3rem">
+      <h3>All appointments — today</h3>
+      <div class="table-wrap" style="overflow-x:auto"><table class="table">
+        <thead><tr><th>Time</th><th>Patient</th><th>Type</th><th>Tests</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>07:30</td><td>Ramaiah (#P1042)</td><td>🏠 Home</td><td>HbA1c, Lipid</td><td><span class="dot dot-ok"></span> Collected</td><td><button class="btn btn-sm btn-ghost" onclick="openPatient('P1042')">Manage</button></td></tr>
+          <tr><td>09:00</td><td>Srinivas M. (#P1001)</td><td>🏥 Walk-in</td><td>CBC</td><td><span class="dot dot-info pulse"></span> In processing</td><td><button class="btn btn-sm btn-ghost" onclick="openPatient('P1001')">Manage</button></td></tr>
+          <tr><td>10:30</td><td>Padmavathi (#P1088)</td><td>🏥 Walk-in</td><td>Thyroid Complete</td><td><span class="dot dot-warn"></span> Waiting</td><td><button class="btn btn-sm btn-ghost" onclick="openPatient('P1088')">Manage</button></td></tr>
+          <tr><td>16:00</td><td>Sujatha (#P1120)</td><td>🏠 Home</td><td>Vitamin D</td><td>🕐 Scheduled</td><td><button class="btn btn-sm btn-ghost" onclick="openPatient('P1120')">Manage</button></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <p class="disclaimer" style="margin-top:1.3rem">Patient records contain sensitive health data. Access is role-restricted,
+    every view/edit is written to the audit log, and sharing requires recorded patient consent.</p>
+  </main>
+</div>
+<script src="../assets/js/app.js"></script>
+<script>
+applyPrefs();
+const PATIENTS = {
+ 'P1001':{ name:'Srinivas M.', phone:'+91 90000 11580', bookings:[
+    ['Full Body Checkup','17 Jul 2026','₹4,999 · completed'],
+    ['CBC','14 Aug 2026','AI insights ready'],
+    ['Lipid Profile','02 May 2026','normal']],
+   reports:[['CBC','14 Aug 2026','2 values watched'],
+    ['Lipid Profile','02 May 2026','LDL stable'],
+    ['HbA1c','18 Feb 2026','5.8% trending up']],
+   consents:{view:true, book:true, share:true, family:true},
+   family:[['Padmavathi','#P1088','Spouse · full view'],['Ramaiah','#P1042','Father · booking only']],
+   appts:[['09:00','🏥 Walk-in','CBC','In processing'],['16:00','🏠 Home (upcoming)','Lipid refresh','Scheduled']] },
+ 'P1042':{ name:'Ramaiah', phone:'+91 90000 44217',
+   bookings:[['HbA1c + Lipid','18 Feb 2026','home collection'],['Vitamin D','Nov 2025','low → supplementing']],
+   reports:[['HbA1c','18 Feb 2026','5.8% trending up'],['Vitamin D','Nov 2025','22 ng/mL']],
+   consents:{view:false, book:true, share:false, family:true},
+   family:[['Srinivas M.','#P1001','Son · account owner']],
+   appts:[['07:30','🏠 Home','HbA1c, Lipid','Collected']] },
+ 'P1088':{ name:'Padmavathi Devi', phone:'+91 90000 44218',
+   bookings:[['Thyroid Complete','02 May 2026','normal'],['CBC','Aug 2026','waiting for collection']],
+   reports:[['Thyroid','02 May 2026','TSH normal'],['CBC','Aug 2026','pending']],
+   consents:{view:true, book:true, share:true, family:true},
+   family:[['Srinivas M.','#P1001','Husband · account owner']],
+   appts:[['10:30','🏥 Walk-in','Thyroid Complete','Waiting']] },
+ 'P1120':{ name:'Sujatha', phone:'+91 90000 77341',
+   bookings:[['Vitamin D','Sep 2026','scheduled today'],['CBC','Jun 2025','annual due']],
+   reports:[['CBC','Jun 2025','normal']],
+   consents:{view:false, book:true, share:false, family:false},
+   family:[['Srinivas M.','#P1001','Son · booking consent only']],
+   appts:[['16:00','🏠 Home','Vitamin D','Scheduled']] },
+};
+const LIST=[['Srinivas M.','#P1001',14,'14 Aug 2026','Self + 3 members','Full consent'],
+ ['Padmavathi Devi','#P1088',6,'02 May 2026','Linked to P1001','Reports visible to self'],
+ ['Ramaiah','#P1042',9,'18 Feb 2026','Linked to P1001','Booking consent only'],
+ ['Lakshmi Prasanna','#P1156',3,'30 Jul 2026','Own account','Full consent'],
+ ['Mohammed Irfan','#P1203',2,'12 Aug 2026','Own account','Full consent']];
+
+function renderPatients(){
+  const q=document.getElementById('pSearch').value.toLowerCase();
+  document.querySelector('#pTable tbody').innerHTML=LIST
+    .filter(p=>!q||p.join(' ').toLowerCase().includes(q))
+    .map(p=>`<tr>
+      <td><b>${p[0]}</b></td><td><code>${p[1]}</code></td><td>${p[2]}</td><td>${p[3]}</td>
+      <td style="font-size:.85rem">${p[4]}</td><td><span class="chip">${p[5]}</span></td>
+      <td><button class="btn btn-sm btn-primary" onclick="openPatient('${p[1].replace('#','')}')">Open 360°</button></td>
+    </tr>`).join('')||'<tr><td colspan="7" style="color:var(--ink-muted)">No patients match this search.</td></tr>';
+}
+function openPatient(id){
+  const p=PATIENTS[id]; if(!p){ toast('Profile not in demo dataset'); return; }
+  const panel=document.getElementById('detailPanel');
+  document.getElementById('dName').textContent=`${p.name} · #${id} · ${p.phone}`;
+  document.getElementById('dBookings').innerHTML=p.bookings.map(b=>`<div><b>${b[0]}</b> · ${b[1]}<br>${b[2]}</div>`).join('');
+  document.getElementById('dReports').innerHTML=p.reports.map(r=>`<div><b>${r[0]}</b> · ${r[1]}<br>${r[2]}</div>`).join('');
+  const PERMS=[['Can view reports','view'],['Can book for them','book'],['Receives shared results','share'],['Linked family account','family']];
+  document.getElementById('dConsent').innerHTML=PERMS.map(([lbl,key])=>`
+    <div class="pf-row"><span>${lbl}</span>
+     <label class="switch"><input type="checkbox" ${p.consents[key]?'checked':''}
+       onchange="setConsent('${id}','${key}',this.checked)"><i></i></label></div>`).join('');
+  document.getElementById('dFamily').innerHTML=p.family.length
+    ? p.family.map(f=>`<div class="pf-row"><span><b>${f[0]}</b> <code>${f[1]}</code></span><span style="font-size:.83rem;color:var(--ink-muted)">${f[2]}</span>
+       <button class="btn btn-ghost btn-sm" onclick="toast('Link settings opened (demo)')">Manage link</button></div>`).join('')
+    : '<p style="font-size:.85rem;color:var(--ink-muted)">No linked family members.</p>';
+  document.getElementById('dAppts').innerHTML=p.appts.map(a=>`
+    <tr><td>${a[0]}</td><td>${a[1]}</td><td>${a[2]}</td><td>${a[3]}</td>
+    <td><button class="btn btn-ghost btn-sm" onclick="toast('Reschedule options (demo)')">Reschedule</button>
+        <button class="btn btn-ghost btn-sm" onclick="toast('Appointment cancelled — patient notified (demo)')">Cancel</button></td></tr>`).join('');
+  panel.style.display='block';
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function setConsent(id,key,val){
+  PATIENTS[id].consents[key]=val;
+  toast(`Consent '${key}' ${val?'granted':'revoked'} for ${PATIENTS[id].name} — audit logged`);
+}
+renderPatients();
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vanaja AI Report Insights — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+.range-bar { position:relative; height:10px; border-radius:var(--r-full); background:linear-gradient(90deg,#F0C36A 0%,#7FD6A4 18%,#7FD6A4 82%,#F0938A 100%); }
+.range-dot { position:absolute; top:-5px; width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid var(--navy-500); box-shadow:var(--shadow-2); transform:translateX(-50%); }
+tr.out-high td, tr.out-low td { background:color-mix(in srgb,#B3261E 6%, transparent); }
+.lang-toggle .btn[aria-pressed="true"] { outline:3px solid var(--maroon-500); outline-offset:-1px; }
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="eyebrow">Vanaja AI · Report Insights</div>
+  <div class="section-head">
+    <h1 style="margin-bottom:.1em">CBC — Complete Blood Count</h1>
+    <div class="lang-toggle" style="display:flex;gap:.5rem">
+      <button class="btn btn-ghost btn-sm" aria-pressed="true" onclick="setLang('en')">English</button>
+      <button class="btn btn-ghost btn-sm" aria-pressed="false" onclick="setLang('te')">తెలుగు లో వివరించండి</button>
+    </div>
+  </div>
+  <p style="color:var(--ink-muted)">Collected 14 Aug 2026 · Kavadiguda Main · Pathologist reviewed ✓ &nbsp;
+    <a href="#" onclick="toast('Opening PDF viewer (demo)');return false">View original PDF ↓</a></p>
+
+  <!-- AI SUMMARY CARD -->
+  <section class="card ai-glow" id="summaryCard" style="margin-bottom:1.2rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem">
+      <h3 style="margin:0">🤖 Vanaja AI Summary</h3>
+      <span class="chip">Educational information only</span>
+    </div>
+    <p id="aiSummary" style="margin-top:.6rem"></p>
+    <div style="display:flex;gap:.55rem;flex-wrap:wrap;margin-top:.9rem">
+      <button class="btn btn-maroon btn-sm" onclick="explainSimply()">✨ Explain Simply</button>
+      <button class="btn btn-ghost btn-sm" onclick="comparePrev()">📈 Compare Previous</button>
+      <a class="btn btn-ghost btn-sm" href="ai-assistant.html?about=report">💬 Ask Vanaja AI</a>
+      <button class="btn btn-ghost btn-sm" onclick="shareDoctor()">👨‍⚕️ Share With Doctor</button>
+    </div>
+  </section>
+
+  <!-- RESULTS TABLE -->
+  <section class="card" style="overflow-x:auto;padding:.6rem 1rem">
+    <table class="table" id="resultsTable">
+      <thead><tr><th>Test</th><th>Your value</th><th>Reference range</th><th>Status</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- TREND CHART -->
+  <section class="grid grid-2" style="margin-top:1.2rem">
+    <div class="card">
+      <h3>Haemoglobin trend</h3>
+      <svg viewBox="0 0 320 120" style="width:100%">
+        <defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(0,51,102,.25)"/><stop offset="1" stop-color="rgba(0,51,102,0)"/></linearGradient></defs>
+        <path d="M10 80 L70 72 L130 84 L190 60 L250 66 L310 48 L310 115 L10 115 Z" fill="url(#tg)"/>
+        <path d="M10 80 L70 72 L130 84 L190 60 L250 66 L310 48" stroke="var(--navy-500)" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <g fill="var(--maroon-600)"><circle cx="70" cy="72" r="4"/><circle cx="190" cy="60" r="4"/><circle cx="310" cy="48" r="4"/></g>
+        <text x="10" y="114" font-size="9" fill="var(--ink-faint)">Mar 2025</text>
+        <text x="270" y="114" font-size="9" fill="var(--ink-faint)">Aug 2026</text>
+      </svg>
+      <p style="font-size:.85rem;color:var(--ink-muted);margin:.4rem 0 0">Steady improvement over the last 4 reports. 📈</p>
+    </div>
+    <div class="card">
+      <h3>Report history timeline</h3>
+      <div class="timeline">
+        <div class="timeline-item"><b>CBC</b> · Aug 2026 · <span class="value-ok">2 values watched</span></div>
+        <div class="timeline-item"><b>Lipid Profile</b> · May 2026 · <span class="value-ok">All normal</span></div>
+        <div class="timeline-item"><b>HbA1c</b> · Feb 2026 · 5.6% · <span class="value-ok">In range</span></div>
+        <div class="timeline-item"><b>Vitamin D</b> · Nov 2025 · 22 ng/mL · <span class="value-low">Low</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="disclaimer" style="margin-top:1.2rem">
+    <b>Safety notice:</b> AI-generated information is for educational and informational purposes and does not replace
+    advice, diagnosis, or treatment from a qualified healthcare professional. Please consult your doctor to interpret your results.
+  </div>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="../assets/js/ai-llm.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Reports');
+
+const RESULTS = [
+  { name:'Haemoglobin', val:'10.2', unit:'g/dL', ref:'13.0 – 17.0', status:'low', pos:28,
+    en:'<span style="color:#B3261E;font-weight:700">⚠ Below the laboratory reference range.</span> '
+       + 'Your haemoglobin (10.2 g/dL) is below the lab\u2019s normal range (13.0–17.0). '
+       + 'This can have multiple causes — iron deficiency, chronic illness, or other factors. '
+       + '<b>Discuss this result with a qualified doctor</b>, especially if you feel fatigued, dizzy, or short of breath.',
+    te:'మీ హిమోగ్లోబిన్ (10.2 g/dL) ప్రయోగశాల సాధారణ శ్రేణికి (13.0–17.0) క్రిందిలో ఉంది. ఈ ఫలితం కొన్ని కారణాల '
+       + 'వల్ల వస్తుంది — ఆహార శక్తి లేకుగా, దీర్ఘకాలిక అనారోగ్యం లేదా ఇతర అంశాలు. '
+       + '<b>ఒక సంయమిత వైద్యులతో ఈ ఫలితాన్ని చర్చించండి</b>.' },
+
+  { name:'Haemoglobin (healthy example)', val:'13.2', unit:'g/dL', ref:'13.0 – 17.0', status:'ok',
+    en:'Your haemoglobin is healthy — it carries oxygen well.',
+    te:'మీ హిమోగ్లోబిన్ ఆరోగ్యకరంగా ఉంది — ఆక్సిజన్‌ను బాగా మోస్తుంది.' },
+
+  { name:'WBC Count', val:'11,400', unit:'/µL', ref:'4,000 – 11,000', status:'high', pos:97,
+    en:'<span style="color:#D98E04;font-weight:700">⚠ Above the laboratory reference range.</span> '
+       + 'Your white blood cell count is slightly above normal — commonly seen with minor infections, stress, '
+       + 'or inflammatory responses. Doctors usually recheck after recovery. <b>Discuss with your doctor</b> if '
+       + 'this persists or you have symptoms like fever or fatigue.',
+    te:'మీ WBC సంఖ్య సాధారణ శ్రేణికి కంటే కొంచెం ఎక్కువ. చిన్న ఇన్ఫెక్షన్లు, ఒత్తిడి, లేదా ఎత్తివేపు సమస్యలు సాధారణంగా కనిపించుతాయి. వైద్యుడితో చర్చించండి.' },
+
+  { name:'Platelets', val:'2.4', unit:'lakh/µL', ref:'1.5 – 4.1', status:'ok',
+    en:'Normal clotting cell count.', te:'సాధారణ రక్తం గడ్డకట్టే కణాల సంఖ్య.' },
+
+  { name:'Vitamin D', val:'22', unit:'ng/mL', ref:'30 – 100', status:'low', pos:12,
+    en:'<span style="color:#D98E04;font-weight:700">⚠ Below the laboratory reference range.</span> '
+       + 'At 22 ng/mL, your vitamin D is below the target range. This is very common in India due to limited '
+       + 'sun exposure. Doctors often suggest safe sun exposure (10–30 min daily on arms/legs) and possibly a '
+       + 'supplement after review. <b>Ask your doctor</b> whether supplementation is right for you.',
+    te:'మీ విటమిన్ D (22 ng/mL) లక్ష్య శ్రేణికి తగ్గుతూ ఉంది. భారతదేశంలో సూర్యకాంతి వ్యతిరేక ప్రదేశన తక్కువగా ఉండటం వల్ల చాలా సాధారణం. '
+       + 'సురక్షితమైన సూర్యకాంతి ప్ర�ూషణ (రోజు 10–30 నిమిషాలు) మరియు సప్లిమెంట్లను సూచించవచ్చు.' },
+];
+let lang = 'en';
+
+function renderTable(){
+  document.querySelector('#resultsTable tbody').innerHTML = RESULTS.map(r=>{
+    const cls = r.status==='high'?'value-high':r.status==='low'?'value-low':'value-ok';
+    const tag = r.status==='high'?'HIGH':r.status==='low'?'LOW':'NORMAL';
+    return `<tr class="${r.status==='high'?'out-high':r.status==='low'?'out-low':''}">
+      <td><b>${r.name}</b><br><small style="color:var(--ink-muted)" data-expl="${r.name}">${lang==='en'?r.en:r.te}</small></td>
+      <td class="${cls}" ${r.pos?`data-pos="${r.pos}"`:''}>${r.val} ${r.unit}</td>
+      <td style="font-size:.85rem;color:var(--ink-muted)">${r.ref}</td>
+      <td><span class="${cls}" style="font-size:.78rem;letter-spacing:.05em">● ${tag}</span></td>
+    </tr>`;
+  }).join('');
+}
+renderTable();
+setLang('en');
+function setLang(l){
+  lang = l;
+  document.querySelectorAll('.lang-toggle .btn').forEach((b,i)=>b.setAttribute('aria-pressed', String(i===(l==='en'?0:1))));
+  renderTable(); explain(true);
+}
+
+function explain(silent){
+  const lows = RESULTS.filter(r=>r.status!=='ok');
+    const okCount = RESULTS.filter(r=>r.status==='ok').length;
+    const questionsEn = '<br><br><b>Questions to discuss with your doctor:</b><ul style="margin:.4rem 0 0 .6rem;padding:0"><li>Should I start vitamin D supplementation?</li><li>Do my low values warrant a follow-up test?</li><li>Any symptoms I should watch for?</li></ul>';
+    const questionsTe = '<br><br><b>మీ డాక్టర్కి చర్చించే ప్రశ్నలు:</b><ul style="margin:.4rem 0 0 .6rem;padding:0"><li>విటమిన్ D సప్లిమెంట్లు అవసరమా?</li><li>లోతలి రక్తపరిశోధన అవసరమా?</li></ul>';
+    const sum = {
+      en: `AI Insight: Your latest report shows <b>${okCount} normal</b> and <b>${lows.length} abnormal</b> values. ${lows.map(l=>l.name).join(', ')} require attention. <i>This does not confirm any condition</i> — only a doctor can interpret your results in full context.<br>${questionsEn}`,
+      te: `AI సమాచారం: మీ తాజా నివేదికలో <b>${okCount} సాధారణ</b> విలువలు మరియు <b>${lows.length} అసాధారణ</b> విలువలు ఉన్నాయి. ${lows.map(l=>l.name).join(', ')} శ్రద్ధ అవసరం. <i>ఇది ఏ స్థితిని నిర్ధారించదు</i> — ఒక వైద్యుడే మీ ఫలితాలను సందర్భంతో కలిపి వివరించగలడు.<br>${lang==='te'?questionsTe:questionsEn}`
+      };
+      document.getElementById('aiSummary').innerHTML = sum[lang];
+  if (!silent) toast(lang==='en' ? 'Explained simply ✨' : 'సరళంగా వివరించబడింది ✨');
+}
+explainSimply = async ()=>{
+  explain(true);
+  const el=document.getElementById('aiSummary');
+  /* LIVE LLM: send the full report table as context */
+  if(window.VanajaAI && VanajaAI.hasKey()){
+    el.innerHTML='<i>✦ Vanaja AI is analysing your report…</i>';
+    try{
+      const ctx=RESULTS.map(r=>`${r.name}: ${r.val} ${r.unit} (ref ${r.ref}) — ${r.status}`).join('\n');
+      const q=lang==='en'
+        ?'Explain this CBC report simply for the patient, value by value, then list 3 questions they should ask their doctor.'
+        :'ఈ CBC రిపోర్ట్‌ను రోగికి సరళంగా వివరించండి, ప్రతి విలువను కూడా, ఆపై డాక్టర్‌ను అడగాల్సిన 3 ప్రశ్నలు చెప్పండి.';
+      const out=await VanajaAI.chat([{role:'user',content:q}],{lang,reportContext:ctx});
+      el.innerHTML=mdLiteSafe(out);
+      toast('Live AI explanation ready ✨'); return;
+    }catch(err){ console.warn('[VanajaAI]',err.message);
+      el.insertAdjacentHTML('afterbegin','<small style="color:#B36A00">⚠ Live AI unreachable — offline explanation shown.</small><br>'); }
+  }
+  const simple = {en:'Think of blood as a delivery network: haemoglobin delivers oxygen (healthy!), platelets handle repairs (normal), WBCs are the security team (slightly on alert), and Vitamin D is like sunlight stored in your body (running low).',
+                  te:'రక్తం ఒక డెలివరీ నెట్‌వర్క్ లాంటిది: హిమోగ్లోబిన్ ఆక్సిజన్ అందిస్తుంది (ఆరోగ్యంగా!), ప్లేట్‌లెట్స్ మరమ్మత్తు చేస్తాయి (సాధారణం), WBC లు భద్రతా బృందం (కొంచెం అప్రమత్తం), విటమిన్ D శరీరంలో నిల్వ ఉన్న ఎండ వెలుతురు లాంటిది (తక్కువగా ఉంది).'};
+  el.innerHTML=simple[lang];
+  toast(lang==='en' ? 'Explained simply ✨' : 'సరళంగా వివరించబడింది ✨');
+};
+function mdLiteSafe(s){ const d=document.createElement('div'); d.textContent=''; return s
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>'); }
+function askAIAboutReport(){
+  /* jump to chat with report context carried over */
+  sessionStorage.setItem('vd_report_ctx', RESULTS.map(r=>`${r.name}: ${r.val} ${r.unit} (ref ${r.ref}, ${r.status})`).join('; '));
+  location.href='ai-assistant.html?about=report';
+}
+comparePrev = async ()=>{
+  if(window.VanajaAI && VanajaAI.hasKey()){
+    toast('Vanaja AI is comparing reports…');
+    try{
+      const out=await VanajaAI.chat([{role:'user',content:
+        'Compare this CBC with the previous one. Previous (Feb 2026): Hb 12.8 g/dL, WBC 10,800/µL, Platelets 2.3 L/µL. Highlight what changed and whether the change direction is reassuring. Be brief.'}],
+        {lang,reportContext:RESULTS.map(r=>`${r.name}: ${r.val} ${r.unit} (${r.status})`).join('; ')});
+      bubbleMini(out); return;
+    }catch(err){ console.warn('[VanajaAI]',err.message); }
+  }
+  toast('Comparing with previous report (Feb 2026) — Hb ↑, WBC ↑ slightly, Vit D →');
+};
+function bubbleMini(text){
+  let box=document.getElementById('cmpBox');
+  if(!box){ box=document.createElement('div'); box.id='cmpBox'; box.className='card ai-glow'; box.style.marginTop='.9rem';
+    document.querySelector('.container.section').insertBefore(box, document.querySelector('.disclaimer')); }
+  box.innerHTML=`<h3 style="margin:.1rem 0 .4rem">📈 AI comparison vs previous report</h3>
+    <p style="font-size:.9rem;line-height:1.7;margin:0">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')}</p>`;
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+shareDoctor = ()=> toast('Secure share link created (demo) — valid 72 hours, consent logged');
+
+/* Range dots for out-of-range rows */
+requestAnimationFrame(()=>document.querySelectorAll('[data-pos]').forEach(td=>{
+  const bar = document.createElement('div'); bar.className='range-bar'; bar.style.marginTop='.45rem';
+  bar.innerHTML = `<div class="range-dot" style="left:${td.dataset.pos}%"></div>`;
+  td.appendChild(bar);
+}));
+</script>
+</body>
+</html>

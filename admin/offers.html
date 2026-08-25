@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Offers & Campaign — Vanaja Admin</title>
+<link rel="icon" href="../assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/theme.css">
+<style>
+.admin-layout { display:grid; grid-template-columns:230px 1fr; min-height:100vh; }
+@media (max-width:900px){ .admin-layout { grid-template-columns:1fr; } .sidenav{position:static!important;height:auto!important;} }
+.sidenav { background:var(--navy-900); color:var(--navy-200); position:sticky; top:0; height:100vh; padding:1rem .8rem; display:flex; flex-direction:column; gap:.2rem; }
+.sidenav a { display:flex; gap:.6rem; align-items:center; text-decoration:none; color:inherit; font-weight:700; font-size:.9rem; padding:.65rem .85rem; border-radius:var(--r-md); }
+.sidenav a:hover, .sidenav a[aria-current="page"] { background:rgba(255,255,255,.09); color:#fff; }
+.offer-edit { border:1.5px solid var(--border); border-radius:var(--r-lg); padding:1rem 1.1rem; margin-bottom:.8rem; }
+.mini-input { width:110px; padding:.4rem .6rem; border:1.5px solid var(--border); border-radius:10px; font:inherit; background:var(--surface); color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidenav">
+    <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem .4rem 1rem">
+      <img src="../assets/img/logo.png" alt="Vanaja" style="height:38px;background:#fff;border-radius:8px;padding:.15rem">
+      <b style="color:#fff;font-size:.9rem">Operations OS</b>
+    </div>
+    <a href="index.html">📊 Dashboard</a>
+    <a href="offers.html" aria-current="page">🏷️ Packages & Offers</a>
+    <a href="patients.html">🧑‍💼 Patients</a>
+    <a href="lab.html">🧪 Lab Workflow</a>
+    <a href="phlebo.html">🛵 Phlebotomist</a>
+    <a href="branches.html">🏥 Branches</a>
+    <div style="margin-top:auto;font-size:.78rem;padding:.6rem">Role: <b style="color:#fff">Admin</b></div>
+  </aside>
+
+  <main style="padding:1.6rem">
+    <header style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.8rem;margin-bottom:1.2rem">
+      <h1 style="margin:0">Packages & Offer Management</h1>
+      <span class="chip">Savings % is always auto-calculated</span>
+    </header>
+
+    <!-- CAMPAIGN CONFIG -->
+    <section class="card ai-glow" style="margin-bottom:1.4rem">
+      <h3>🎯 "Save up to N%" campaign</h3>
+      <p style="font-size:.86rem;color:var(--ink-muted);margin-top:0">The public banner shows the <b>highest genuine savings across active offers</b>.
+      It displays “69%” only when a real offer supports it — otherwise it shows the true maximum or hides itself.</p>
+      <div class="grid grid-4" style="align-items:end;margin-top:.7rem">
+        <label style="font-size:.88rem;font-weight:700;display:flex;gap:.5rem;align-items:center">
+          <input type="checkbox" id="cEnabled" onchange="saveCampaignForm()"> Campaign enabled
+        </label>
+        <div class="field"><label for="cStart">Start date</label><input class="input" type="date" id="cStart"></div>
+        <div class="field"><label for="cEnd">End date</label><input class="input" type="date" id="cEnd"></div>
+        <div class="field"><label>Current truthful max</label><div><span class="badge-save" id="maxBadge"></span></div></div>
+      </div>
+    </section>
+
+    <!-- OFFER EDITOR -->
+    <section class="card">
+      <h3>Pricing & offers</h3>
+      <p style="font-size:.84rem;color:var(--ink-faint)">Set reference (original) price only when it's a genuine benchmark.
+      Savings % = ((Original − Current) ÷ Original) × 100.</p>
+      <div id="offerList"><!-- JS --></div>
+      <button class="btn btn-maroon" onclick="persistAll()">💾 Save all offers</button>
+      <span id="saveNote" style="margin-left:.8rem;font-size:.85rem;color:#1E9E6A;font-weight:700"></span>
+    </section>
+
+    <!-- PACKAGE CREATOR -->
+    <section class="card" style="margin-top:1.4rem">
+      <h3>+ Create new package</h3>
+      <form onsubmit="return createPkg(event)" class="grid grid-4" style="align-items:end">
+        <div class="field" style="grid-column:span 2"><label>Name</label><input class="input" id="npName" required placeholder="e.g. Heart Care Package"></div>
+        <div class="field"><label>Tests count</label><input class="input" type="number" id="npCount" value="10" min="1"></div>
+        <div class="field"><label>Reference price ₹</label><input class="input" type="number" id="npOrig" required></div>
+        <div class="field"><label>Offer price ₹</label><input class="input" type="number" id="npCur" required></div>
+        <div class="field" style="grid-column:span 2"><label>Preparation</label><input class="input" id="npPrep" value="No fasting required"></div>
+        <button class="btn btn-primary" type="submit">Create package</button>
+      </form>
+      <div id="newPkgPreview" style="margin-top:.8rem"></div>
+    </section>
+
+    <p class="disclaimer" style="margin-top:1.3rem">Consumer-protection note: displayed discounts are computed from configured prices.
+    Reference prices must reflect genuine list prices. Admin edits are audit-logged with user + timestamp.</p>
+  </main>
+</div>
+<script src="../assets/js/app.js"></script>
+<script>
+applyPrefs();
+
+const camp = loadCampaign();
+document.getElementById('cEnabled').checked = camp.enabled;
+document.getElementById('cStart').value = camp.startDate;
+document.getElementById('cEnd').value = camp.endDate;
+
+function saveCampaignForm(){
+  const c = loadCampaign();
+  c.enabled = document.getElementById('cEnabled').checked;
+  c.startDate = document.getElementById('cStart').value;
+  c.endDate = document.getElementById('cEnd').value;
+  saveCampaign(c);
+  renderMax(); toast('Campaign saved');
+}
+function renderMax(){
+  const m = maxActiveSavings();
+  document.getElementById('maxBadge').textContent =
+    m > 0 ? `Public banner says: SAVE UP TO ${m}%` : 'Banner hidden — no active offers';
+}
+
+let offers = loadOffers();
+function renderOffers(){
+  document.getElementById('offerList').innerHTML = offers.map((o,i)=>{
+    const label = o.type==='package' ? (PACKAGES.find(p=>p.id===o.ref)?.name || o.ref) : (TESTS.find(t=>t.id===o.ref)?.name || o.ref);
+    return `<div class="offer-edit">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;align-items:center">
+        <b>${label}</b>
+        <label style="font-size:.82rem;font-weight:700;display:flex;gap:.45rem;align-items:center">
+          <input type="checkbox" ${o.active?'checked':''} onchange="offers[${i}].active=this.checked;renderMax()"> Active offer
+        </label>
+      </div>
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-top:.55rem">
+        <label style="font-size:.83rem">Original ₹<input class="mini-input" type="number" value="${o.originalPrice??''}" onchange="offers[${i}].originalPrice=+this.value;renderMax()"></label>
+        <label style="font-size:.83rem">Current ₹<input class="mini-input" type="number" value="${o.currentPrice??''}" onchange="offers[${i}].currentPrice=+this.value;renderMax()"></label>
+        <span class="badge-save">Auto savings: ${savingsPct(o)}%</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function persistAll(){ saveOffers(offers); renderMax();
+  const n=document.getElementById('saveNote'); n.textContent='✓ Saved '+new Date().toLocaleTimeString(); setTimeout(()=>n.textContent='',2500); }
+function createPkg(e){
+  e.preventDefault();
+  const name=document.getElementById('npName').value;
+  const orig=+document.getElementById('npOrig').value, cur=+document.getElementById('npCur').value;
+  const pct=Math.round((orig-cur)/orig*100);
+  document.getElementById('newPkgPreview').innerHTML =
+    `<div class="card card-hover" style="max-width:330px">
+       <span class="chip">New</span><h4>${name}</h4>
+       <span class="badge-save">Save ${pct}%</span>
+       <div><span class="price">${fmtINR(cur)}</span><span class="price-strike">${fmtINR(orig)}</span></div>
+     </div>`;
+  toast(`Package "${name}" created — savings ${pct}%`);
+  return false;
+}
+renderOffers(); renderMax();
+</script>
+</body>
+</html>

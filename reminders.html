@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Health Reminders — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+/* ===== Notification list ===== */
+.notif { display:flex; gap:.85rem; align-items:flex-start; padding:1rem 1.1rem;
+  border:1px solid var(--border); border-radius:var(--r-lg); background:var(--surface);
+  transition:box-shadow var(--t-fast), transform var(--t-fast); position:relative; }
+.notif:hover { box-shadow:var(--shadow-2); transform:translateY(-2px); }
+.notif.unread::after { content:"●"; position:absolute; top:.9rem; right:1rem;
+  color:var(--maroon-600); font-size:.7rem; }
+.n-icon { width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;flex:none;
+  background:linear-gradient(135deg,rgba(0,51,102,.10),rgba(107,27,71,.08)); }
+.n-body { flex:1; min-width:200px; }
+.n-title { font-weight:800; font-size:.94rem; margin-bottom:.15rem; padding-right:1.2rem; }
+.n-text { font-size:.86rem; color:var(--ink-muted); line-height:1.6; font-family:'Noto Sans Telugu','Plus Jakarta Sans',sans-serif; }
+.n-time { font-size:.72rem; color:var(--ink-faint); margin-top:.35rem; display:block; }
+.n-actions { display:flex; gap:.45rem; margin-top:.6rem; flex-wrap:wrap; }
+
+/* urgency accents */
+.n-urgent { border-left:4px solid #B36A00; background:linear-gradient(90deg,rgba(217,142,4,.07),transparent 40%); }
+.n-good   { border-left:4px solid #1E9E6A; }
+.n-info   { border-left:4px solid var(--navy-500); }
+
+/* settings switches */
+.switch { position:relative; width:44px;height:24px; display:inline-block; flex:none; }
+.switch input { opacity:0; width:100%; height:100%; margin:0; cursor:pointer; position:relative; z-index:1; }
+.switch i { position:absolute; inset:0; border-radius:999px; background:var(--border); transition:background var(--t-fast); pointer-events:none; }
+.switch i::after { content:""; position:absolute; top:3px; left:3px; width:18px;height:18px;border-radius:50%; background:#fff; transition:left var(--t-fast); box-shadow:var(--shadow-1); }
+.switch input:checked + i { background:var(--maroon-600); }
+.switch input:checked + i::after { left:23px; }
+.set-row { display:flex; justify-content:space-between; align-items:center; gap:1rem;
+  padding:.75rem 0; border-bottom:1px dashed var(--border); font-size:.9rem; }
+.set-row:last-child { border-bottom:none; }
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.6rem">
+  <div class="section-head">
+    <div><div class="eyebrow">Health+ · Smart Reminders 🔔</div><h1>Your reminders</h1></div>
+    <button class="btn btn-ghost btn-sm" onclick="markAllRead()">Mark all read</button>
+  </div>
+
+  <div class="grid grid-2" style="align-items:start">
+    <!-- ============ NOTIFICATIONS ============ -->
+    <section style="display:flex;flex-direction:column;gap:.7rem" id="notifList"></section>
+
+    <!-- ============ SETTINGS ============ -->
+    <div>
+      <section class="card" style="margin-bottom:1rem">
+        <h3>Reminder channels</h3>
+        <p style="font-size:.82rem;color:var(--ink-faint);margin-top:0">Reminders are generated from your own
+        test history and clinician-recommended schedules — never marketing spam.</p>
+        <div id="channelSets"></div>
+      </section>
+
+      <section class="card">
+        <h3>Monitoring schedules we track for you</h3>
+        <ul style="list-style:none;padding:0;line-height:2.05;font-size:.88rem">
+          <li>🍬 <b>HbA1c</b> — every 3 months (clinician-guided)</li>
+          <li>🩸 <b>CBC</b> — annually</li>
+          <li>❤️ <b>Lipid Profile</b> — annually from age 30</li>
+          <li>🦋 <b>Thyroid</b> — annually</li>
+          <li>☀️ <b>Vitamin D</b> — every 6 months while correcting</li>
+          <li>🧑‍🦳 <b>Full Body Checkup</b> — annually (family members too)</li>
+        </ul>
+        <small style="color:var(--ink-faint)">Schedules are general wellness guidance — always follow your
+        clinician's recommended monitoring plan.</small>
+      </section>
+    </div>
+  </div>
+
+  <p class="disclaimer" style="margin-top:1.2rem">Smart reminders are informational prompts based on your past
+  Vanaja reports and common wellness schedules. They are not medical advice and do not replace your clinician's
+  recommended monitoring or follow-up plan.</p>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Reports');
+
+/* ================= REMINDER ENGINE =================
+   Each reminder: type, urgency, EN + TE copy, deep-link action.
+   In production these fire from scheduled checks of report dates;
+   here the four spec examples render as live notifications.     */
+const NOTIFS=[
+ {icon:'🔔',cls:'n-urgent',unread:true,time:'Today · 8:00 AM',
+  title:'Your annual health checkup may be due.',
+  text:'It has been over a year since your last Full Body Checkup (Jul 2025). An annual review helps keep your health score current.',
+  te:'మీ వార్షిక ఆరోగ్య తనిఖీ అయిపోయి ఉండవచ్చు.',
+  actions:[['Book Full Body Checkup','booking.html?package=fullbody','btn-maroon'],
+           ['Snooze 1 week',null,'btn-ghost']]},
+
+ {icon:'🔔',cls:'n-urgent',unread:true,time:'Yesterday',
+  title:"Your previous HbA1c test was completed 3 months ago.",
+  text:"Consider following your clinician's recommended monitoring schedule. Your last result was 5.8% in Feb 2026 — a recheck shows whether your trend is improving.",
+  te:'మీ గత HbA1c పరీక్ష 3 నెలల క్రితం జరిగింది. మీ డాక్టర్ సూచించిన షెడ్యూల్‌ను అనుసరించండి.',
+  actions:[['Recheck HbA1c · ₹600','booking.html?test=ghba1c','btn-primary'],
+           ['View trend','trends.html','btn-ghost']]},
+
+ {icon:'📄',cls:'n-good',unread:true,time:'2 days ago',
+  title:'Your report is ready.',
+  text:'CBC — Complete Blood Count (14 Aug) is ready with AI insights. 2 values were flagged for a closer look.',
+  te:'మీ రిపోర్ట్ సిద్ధంగా ఉంది.',
+  actions:[['Open AI insights','report-insights.html','btn-maroon']]},
+
+ {icon:'🏠',cls:'n-info',unread:false,time:'Scheduled · Tomorrow 7:00 AM',
+  title:'Your home collection is scheduled for tomorrow.',
+  text:'Ravi Kumar (VD-104) will arrive between 7–8 AM. Fasting required for HbA1c + Lipid Profile — no food after 10 PM tonight. Keep your OTP handy.',
+  te:'మీ హోమ్ కలెక్షన్ రేపు ఉదయం 7 గంటలకు షెడ్యూల్ చేయబడింది.',
+  actions:[['Track collector','track.html','btn-primary'],['Reschedule',null,'btn-ghost']]},
+];
+
+const CHANNELS=[
+ ['In-app notifications','inapp',true],
+ ['WhatsApp','wa',true],
+ ['SMS','sms',true],
+ ['Email digest (weekly)','email',false],
+];
+const sets=JSON.parse(localStorage.getItem('vd_reminder_sets')||'null')||Object.fromEntries(CHANNELS.map(c=>[c[1],c[2]]));
+let readSet=new Set(JSON.parse(localStorage.getItem('vd_notif_read')||'[]'));
+
+function renderNotifs(){
+  document.getElementById('notifList').innerHTML=NOTIFS.map((n,i)=>{
+    const unread=n.unread&&!readSet.has(i);
+    const acts=(n.actions||[]).map(([lbl,href,cls])=>
+      href?`<a class="btn ${cls} btn-sm" href="${href}">${lbl}</a>`
+          :`<button class="btn ${cls} btn-sm" onclick="toast('Snoozed — we\\'ll remind you again next week')">${lbl}</button>`).join('');
+    return `<article class="notif ${n.cls} ${unread?'unread':''}" onclick="markRead(${i})" style="cursor:pointer">
+      <div class="n-icon">${n.icon}</div>
+      <div class="n-body">
+        <div class="n-title">${n.title}</div>
+        <div class="n-text">${n.text}<br><span style="opacity:.75">${n.te}</span></div>
+        <span class="n-time">${n.time}</span>
+        <div class="n-actions">${acts}</div>
+      </div>
+    </article>`;
+  }).join('');
+}
+function markRead(i){ readSet.add(i); localStorage.setItem('vd_notif_read',JSON.stringify([...readSet])); renderNotifs(); }
+function markAllRead(){ NOTIFS.forEach((_,i)=>readSet.add(i)); localStorage.setItem('vd_notif_read',JSON.stringify([...readSet])); toast('All caught up ✓'); renderNotifs(); }
+
+function renderChannels(){
+  document.getElementById('channelSets').innerHTML=CHANNELS.map(([lbl,key])=>`
+    <div class="set-row"><span>${lbl}</span>
+      <label class="switch"><input type="checkbox" ${sets[key]?'checked':''}
+        onchange="sets['${key}']=this.checked;localStorage.setItem('vd_reminder_sets',JSON.stringify(sets));toast('${lbl} ${sets[key]?'on':'updated'}')"><i></i></label>
+    </div>`).join('')
+    +`<div class="set-row"><span>🔔 Test reminder now (demo)</span>
+      <button class="btn btn-maroon btn-sm" onclick="demoPush()">Send test notification</button></div>`;
+}
+/* Browser-notification demo (permission-gated) */
+function demoPush(){
+  if(!('Notification' in window)){ toast('Browser notifications not supported here'); return; }
+  if(Notification.permission==='granted'){
+    new Notification('Vanaja Diagnostic Centre',{body:'Your annual health checkup may be due.'});
+    toast('Browser notification sent ✓');
+  } else if(Notification.permission!=='denied'){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted'){ new Notification('Vanaja Diagnostic Centre',{body:'Your annual health checkup may be due.'}); toast('Enabled & sent ✓'); }
+      else toast('Permission declined — in-app reminders still active');
+    });
+  } else toast('Blocked in browser settings — in-app reminders still active');
+}
+
+renderNotifs(); renderChannels();
+</script>
+</body>
+</html>

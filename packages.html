@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Health Packages — Vanaja Diagnostic Centre</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section" style="padding-top:1.8rem">
+  <div class="eyebrow">Curated by our pathologists</div>
+  <h1>Health Checkup Packages</h1>
+  <p style="max-width:44rem;color:var(--ink-muted)">Comprehensive testing bundles designed for every age and need.
+  Savings shown are computed from real configured prices — no artificial discounts.</p>
+
+  <div style="margin:1.2rem 0"><span class="badge-save" id="promoBadge"></span></div>
+
+  <!-- Quick category chips (reuse smart-search categories) -->
+  <div id="pkgChips" style="display:flex;flex-wrap:wrap;gap:.45rem;margin:.4rem 0 1rem"></div>
+
+  <div class="grid grid-3" id="pkgGrid" style="margin-top:1rem"><!-- JS --></div>
+
+  <!-- Detail blocks -->
+  <div class="grid grid-3" style="margin-top:2.4rem" id="detailGrid"></div>
+
+  <section class="section card" style="margin-top:2rem;text-align:center">
+    <h3>Not sure which package to pick?</h3>
+    <p style="color:var(--ink-muted)">Talk to our team — we'll help you choose the right checkup. Or ask <a href="ai-assistant.html" style="color:var(--maroon-600);font-weight:700">Vanaja AI</a>.</p>
+    <a class="btn btn-maroon" href="tel:+919****1580">Call +91 90000 11580</a>
+  </section>
+</main>
+
+<div id="chrome-fab"></div>
+<div id="chrome-bottom"></div>
+<div id="chrome-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('Packages');
+
+/* Campaign badge — only when genuinely supported */
+const promo = campaignHeadline();
+if (promo) document.getElementById('promoBadge').textContent = `SAVE UP TO ${promo.percent}% ON SELECTED PACKAGES`;
+
+/* Category chips -> filter grid */
+const PKG_CHIPS=[['All',''],['Full Body','fullbody|senior'],['Diabetes','diabetes'],['Thyroid','thyroidpkg'],
+                 ['Heart','heart'],["Women's Health",'women'],['60+','senior']];
+document.getElementById('pkgChips').innerHTML = PKG_CHIPS.map(([label,pats],i)=>
+  `<button type="button" class="chip pkg-chip" data-p="${pats}" style="cursor:pointer;border:1px solid var(--border);background:${i===0?'var(--maroon-600)':'var(--surface-2)'};color:${i===0?'#fff':'inherit'};padding:.35rem .85rem;border-radius:999px;font-size:.78rem;font-weight:700">${label}</button>`).join('');
+document.querySelectorAll('.pkg-chip').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.pkg-chip').forEach(x=>{x.style.background='var(--surface-2)';x.style.color='inherit';});
+  b.style.background='var(--maroon-600)'; b.style.color='#fff';
+  renderPkgs(b.dataset.p);
+}));
+
+/* Effective price = active admin offer if genuinely lower, else configured price */
+function effectivePkg(p){
+  const o = loadOffers().find(x=>x.ref===p.id && x.active && x.currentPrice!=null);
+  const cur = (o && o.currentPrice < p.currentPrice) ? o.currentPrice : p.currentPrice;
+  const orig = p.originalPrice;
+  const pct = (orig && orig>0 && cur!=null && cur<orig) ? Math.round((orig-cur)/orig*100) : null;
+  return {cur, orig:(pct!=null?orig:null), pct};
+}
+
+function pkgCard(p){
+  const {cur,orig,pct} = effectivePkg(p);
+  return `<article class="card card-hover pkg-card" data-id="${p.id}" style="display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="chip">${p.tag}</span>${pct!=null?`<span class="badge-save">Save ${pct}%</span>`:''}
+    </div>
+    <h3 style="margin:.7rem 0 .25rem">${p.name}</h3>
+    <p style="color:var(--ink-muted);font-size:.9rem;margin:0 0 .5rem">${p.desc}</p>
+    <ul style="list-style:none;padding:0;font-size:.88rem;line-height:1.9;color:var(--ink-muted)">
+      ${p.includes.slice(0,4).map(i=>`<li>✓ ${i}</li>`).join('')}
+      <li>✓ ${p.testsCount} tests included</li>
+      ${p.homeCollection?'<li>🏠 Free home collection available</li>':''}
+    </ul>
+    <div class="field" style="font-size:.82rem;color:var(--ink-faint);background:var(--surface-2);border-radius:var(--r-md);padding:.55rem .8rem;margin:.5rem 0">
+      ⚗️ Preparation: ${p.prep}
+    </div>
+    <div style="margin:auto 0 .7rem;display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap">
+      <span class="price" style="font-size:1.55rem">${fmtINR(cur)}</span>
+      ${orig?`<span class="price-strike">${fmtINR(orig)}</span>`:''}
+    </div>
+    <div style="display:flex;gap:.55rem">
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="addToCart('${p.id}','package');location.href='booking.html?package=${p.id}'">Book Now</button>
+      <a class="btn btn-ghost btn-sm" href="#${p.id}">View Details</a>
+    </div>
+  </article>`;
+}
+
+function renderPkgs(pattern){
+  const ids = pattern ? pattern.split('|') : null;
+  document.getElementById('pkgGrid').innerHTML =
+    PACKAGES.filter(p=>!ids || ids.includes(p.id)).map(pkgCard).join('')
+    || '<p style="color:var(--ink-muted)">No packages in this category yet.</p>';
+}
+renderPkgs('');
+
+/* Deep-link detail blocks */
+document.getElementById('detailGrid').innerHTML = PACKAGES.map(p=>{
+  const {cur,orig,pct} = effectivePkg(p);
+  return `<section class="card" id="d-${p.id}" style="scroll-margin-top:110px">
+    <div class="eyebrow">Package Details</div>
+    <h3>${p.name}</h3>
+    <p style="font-size:.9rem;color:var(--ink-muted)">${p.includes.join(' · ')}</p>
+    <p style="font-size:.85rem;color:var(--ink-faint)">⚗️ ${p.prep}${p.homeCollection?' · 🏠 Home collection':''}</p>
+    <a class="btn btn-maroon btn-sm" href="booking.html?package=${p.id}">Book ${p.name}</a>
+  </section>`;
+}).join('');
+
+/* Deep-link scroll: #fullbody scrolls the card, #d-fullbody its details */
+const target = location.hash.slice(1);
+if (target){
+  const el = document.getElementById(target) || document.getElementById('d-'+target.replace(/^d-/,''));
+  if (el) el.scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body>
+</html>

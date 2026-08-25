@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vanaja AI Health Assistant</title>
+<link rel="icon" href="assets/img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/theme.css">
+<style>
+.chat-wrap { display:flex; flex-direction:column; height:calc(100vh - 210px); min-height:420px; }
+.chat-scroll { flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:.7rem; padding:.4rem .2rem; }
+.chat-input-row { display:flex; gap:.6rem; padding-top:.8rem; border-top:1px solid var(--border); }
+.sugg { display:flex; gap:.5rem; flex-wrap:wrap; margin:.7rem 0; }
+.sugg button { border:1.5px solid var(--maroon-200); color:var(--maroon-600); background:var(--maroon-50);
+  border-radius:var(--r-full); padding:.4rem .85rem; font-size:.83rem; font-weight:700; cursor:pointer; }
+[data-theme="dark"] .sugg button { background:rgba(139,46,95,.15); color:var(--maroon-400); border-color:var(--maroon-600); }
+.typing { display:inline-flex; gap:4px; padding:.9rem 1.05rem; }
+.typing i { width:7px;height:7px;border-radius:50%;background:var(--maroon-500);animation:tp 1.2s infinite; }
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes tp { 0%,60%,100%{opacity:.25;transform:translateY(0)} 30%{opacity:1;transform:translateY(-3px)} }
+</style>
+</head>
+<body>
+<div id="chrome-header"></div>
+
+<main class="container section chat-wrap" style="padding-top:1.4rem">
+  <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:.6rem">
+    <div class="fab-ai" style="position:static;width:48px;height:48px;pointer-events:none">✦</div>
+    <div><h1 style="margin:0;font-size:1.35rem">Vanaja AI Health Assistant</h1>
+    <span style="font-size:.83rem;color:var(--ink-muted)">Safe medical guidance · Not a doctor</span></div>
+    <div class="lang-toggle" style="margin-left:auto;display:flex;gap:.4rem">
+      <button class="btn btn-ghost btn-sm" id="lang-en" aria-pressed="true" onclick="setLang('en')">English</button>
+      <button class="btn btn-ghost btn-sm" id="lang-te" aria-pressed="false" onclick="setLang('te')">తెలుగు</button>
+      <button class="btn btn-ghost btn-sm" id="lang-hi" aria-pressed="false" onclick="setLang('hi')">हिंदी</button>
+    </div>
+  </div>
+
+  <div class="chat-scroll" id="chatScroll" aria-live="polite"></div>
+
+  <div class="sugg" id="suggestRow">
+    <button onclick="ask(this.textContent)">What does my CBC mean?</button>
+    <button onclick="ask(this.textContent)">Explain my thyroid report</button>
+    <button onclick="ask(this.textContent)">What is HbA1c?</button>
+    <button onclick="ask(this.textContent)">Which test should I book?</button>
+    <button onclick="ask(this.textContent)">Should I fast before a lipid profile?</button>
+    <button onclick="ask(this.textContent)">Explain this report in Telugu</button>
+  </div>
+
+  <form class="chat-input-row" onsubmit="return submitQ(event)">
+    <input class="input" id="chatInput" placeholder="Ask about tests, preparation, or your report…" autocomplete="off">
+    <button class="btn btn-primary" type="submit">Send</button>
+  </form>
+
+  <p class="disclaimer" style="margin-top:.8rem">AI-generated information is for educational and informational purposes
+  and does not replace advice, diagnosis, or treatment from a qualified healthcare professional.</p>
+</main>
+
+<div id="chrome-bottom"></div>
+<script src="assets/js/ai-llm.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+mountChrome('AI');
+
+/* report context handoff from insights page */
+const REPORT_CTX=sessionStorage.getItem('vd_report_ctx')||'';
+
+/* settings panel for live LLM */
+document.querySelector('.chat-wrap').insertAdjacentHTML('afterbegin','<div id="vaiSettings"></div>');
+VanajaAI.renderSettings('vaiSettings');
+
+/* ============ LANGUAGE STATE ============ */
+let LANG = localStorage.getItem('vd_ai_lang') || 'en';
+function setLang(l){
+  LANG = l; localStorage.setItem('vd_ai_lang', l);
+  ['en','te','hi'].forEach(c=>{
+    const b=document.getElementById('lang-'+c);
+    if(b) b.setAttribute('aria-pressed', String(c===l));
+  });
+  bubble('chat-ai', {
+    en:'Switched to English. How can I help?',
+    te:'తెలుగులోకి మారాను. సహాయపడేలా ఏమి చేయగలను?',
+    hi:'हिंदी में बदल गया। मैं कैसे मदद कर सकता हूँ?'
+  }[l]);
+}
+
+/* ============ URGENT-RISK ESCALATION FRAMEWORK ============
+   Red-flag detection runs BEFORE any informational answer.
+   The AI never attempts diagnosis of urgent symptoms — it
+   escalates to professional/emergency care immediately.   */
+const RED_FLAGS = [
+  { k:/chest pain|crushing chest|arm numb|left arm pain|सीने में दर्द|छाती.*दर्द|ఛాతీ.*నొప్పి/i, level:'emergency' },
+  { k:/can.?t breathe|breathless|severe shortness|gasping|श्वास|ఊపిరి.*ఆడక/i, level:'emergency' },
+  { k:/unconscious|fainted|collapse|seizure|stroke|slurred speech|मूर्छा|झटके|మూర్ఛపడ/i, level:'emergency' },
+  { k:/heavy bleeding|blood vomiting|vomiting blood|accident|रक्त.*उल्टी|रक्तस्राव|రక్త.*వాంతులు/i, level:'emergency' },
+  { k:/suicid|kill myself|end my life|आत्महत्या|ఆత్మహత్య/i, level:'crisis' },
+  { k:/108|ambulance|अंबुलेंस|అంబులెన్స్/i, level:'info-emergency' },
+  { k:/high fever.*(days|week)|severe pain.*(abdomen|stomach)|blood in stool|urine.*(blood|painful)/i, level:'urgent-care' },
+];
+function checkEscalation(q){
+  for (const f of RED_FLAGS){
+    if (f.k.test(q)){
+      const M = ESCALATE[f.level];
+      return `<div style="background:rgba(179,38,30,.08);border:1.5px solid #B3261E;border-radius:var(--r-lg);padding:.9rem 1rem;margin:.2rem 0">
+        <b style="color:#B3261E">⚕️ ${M.title}</b><br>${M.body}
+        <div style="margin-top:.7rem;display:flex;gap:.5rem;flex-wrap:wrap">
+          <a class="btn btn-primary btn-sm" href="tel:${M.tel}">📞 ${M.tel}</a>
+          <a class="btn btn-ghost btn-sm" href="booking.html">Book a consultation test</a>
+        </div></div>`;
+    }
+  }
+  return null;
+}
+const ESCALATE = {
+  emergency:{
+    en:{ title:'This may need urgent medical attention.', body:'Please don\'t wait for an online answer. Call <b>108</b> (free ambulance) or go to the nearest hospital emergency department right now. Vanaja AI cannot assess emergencies.' },
+    te:{ title:'ఇది తక్షణ వైద్య శ్రద్ధ అవసరం కావచ్చు.', body:'దయచేసి <b>108</b>కు కాల్ చేయండి లేదా సమీప ఆసుపత్రి ఎమర్జెన్సీకి వెళ్లండి. Vanaja AI ఎమర్జెన్సీలను అంచనా వేయదు.' },
+    hi:{ title:'इसे तत्काल चिकित्सा ध्यान की आवश्यकता हो सकती है।', body:'कृपया <b>108</b> पर कॉल करें या नज़दीकी अस्पताल की इमरजेंसी में जाएँ। Vanaja AI आपात स्थितियों का आकलन नहीं करता।' },
+    tel:'108'
+  },
+  crisis:{
+    en:{ title:'You matter. Please reach out now.', body:'Please call the Tele-MANAS helpline at <b>14416</b> (24×7, free, confidential) or talk to someone you trust. Vanaja AI is not equipped to support a mental-health crisis.', tel:'14416' },
+    te:{ title:'మీరు ముఖ్యమైనవారు. దయచేసి వెంటనే మాట్లాడండి.', body:'Tele-MANAS హెల్ప్‌లైన్ <b>14416</b>కు కాల్ చేయండి (24×7, ఉచితం). Vanaja AI మానసిక సంక్షోభానికి సహాయం చేయలేదు.', tel:'14416' },
+    hi:{ title:'आप महत्वपूर्ण हैं। कृपया अभी संपर्क करें।', body:'Tele-MANAS हेल्पलाइन <b>14416</b> पर कॉल करें (24×7, निःशुल्क)। Vanaja AI मानसिक स्वास्थ्य संकट में सहायता नहीं कर सकता।', tel:'14416' }
+  },
+  'urgent-care':{
+    en:{ title:'This should be evaluated by a doctor soon.', body:'These symptoms deserve a proper clinical examination — not an online answer. Please book a consultation or visit our Kavadiguda Main centre today. I can help you prepare with relevant tests.', tel:'+919000011580' },
+    te:{ title:'వైద్యుడిని త్వరలో సంప్రదించండి.', body:'ఈ లక్షణాలకు సరైన క్లినికల్ పరీక్ష అవసరం. దయచేసి ఈరోజే మా కేంద్రాన్ని సందర్శించండి.', tel:'+919000011580' },
+    hi:{ title:'इसे जल्द ही डॉक्टर से जांचवाएँ।', body:'इन लक्षणों की उचित क्लिनिकल जांच ज़रूरी है। कृपया आज ही हमारे केंद्र पर पहुँचें।', tel:'+919000011580' }
+  }
+};
+
+/* ============ KNOWLEDGE BASE (EN / TE / HI) ============ */
+const KB = [
+  { k:/fast.*lipid|lipid.*fast|fasting/i,
+    en:'Yes — a Lipid Profile needs a **12-hour fast** (water is fine). Morning slots between 7–10 AM give the most accurate readings. Want me to point you to home collection?',
+    te:'అవును — లిపిడ్ ప్రొఫైల్‌కు **12 గంటల ఉపవాసం** అవసరం (నీరు మాత్రమే). ఉదయం 7–10 గంటల స్లాట్లు ఉత్తమం.',
+    hi:'हाँ — लिपिड प्रोफ़ाइल के लिए **12 घंटे का उपवास** ज़रूरी है (पानी चलेगा). सुबह 7–10 बजे के स्लॉट सबसे सटीक होते हैं.' },
+  { k:/cbc|blood count/i,
+    en:'A CBC screens red cells (oxygen carry), white cells (immunity) and platelets (clotting) from one small sample — no fasting needed. You can see an AI-analysed example in Report Insights.',
+    te:'CBC ఒక చిన్న రక్త నమూనాతో ఎర్ర కణాలు (ఆక్సిజన్), తెల్ల కణాలు (రోగనిరోధకత), ప్లేట్‌లెట్స్ (గడ్డకట్టడం) పరిశోధిస్తుంది — ఉపవాసం అవసరం లేదు.',
+    hi:'CBC एक छोटे नमूने से लाल रक्त कोशिकाएँ (ऑक्सीजन), श्वेत रक्त कोशिकाएँ (इम्युनिटी) और प्लेटलेट्स (थक्का) जांचता है — उपवास ज़रूरी नहीं.' },
+  { k:/hba1c|a1c|glycat/i,
+    en:'**HbA1c** shows your average blood sugar over ~3 months (as %). Below 5.7% is normal; 5.7–6.4% suggests prediabetes range; ≥6.5% is a diabetes-range value your doctor must confirm. No fasting needed — ₹600 at Vanaja.',
+    te:'**HbA1c** గత ~3 నెలల సగటు రక్తంలో షుగర్‌ను (%) చూపిస్తుంది. 5.7% కంటే తక్కువ సాధారణం; 5.7–6.4% ప్రీ-డయాబెటిస్ పరిధి; ≥6.5% — వైద్యుడు ధృవీకరించాలి. ₹600.',
+    hi:'**HbA1c** पिछले ~3 महीनों का औसत ब्लड शुगर (%) दिखाता है। 5.7% से कम सामान्य; 5.7–6.4% प्रीडायबिटीज़ रेंज; ≥6.5% — डॉक्टर से पुष्टि कराएँ। ₹600.' },
+  { k:/thyroid|tsh|t3|t4/i,
+    en:'Your thyroid panel covers **TSH, T3 & T4**. TSH tells the pituitary\u2019s signal; T3/T4 show the hormones themselves. Out-of-range values are common and usually manageable — but interpretation belongs to your doctor. Morning sampling preferred; no fasting strictly required.',
+    te:'మీ థైరాయిడ్ ప్యానెల్ **TSH, T3 & T4** కలిగి ఉంటుంది. అసాధారణ విలువలు సాధారణం — కానీ వివరణ వైద్యుడిదే. ఉదయం నమూనా మెరుస్తుంది.',
+    hi:'थायरॉइड पैनल में **TSH, T3 और T4** होते हैं। असामान्य मान आम हैं और आमतौर पर नियंत्रणीय — पर व्याख्या डॉक्टर ही करेंगे। सुबह का नमूना बेहतर।' },
+  { k:/which test|what test|should i book|suggest.*test/i,
+    en:'Let me guide you! Open the **AI Test Recommender** (🎯 Find my test below) — answer 4 quick questions and I\u2019ll suggest matching tests from our catalogue. Or tell me your goal here: wellness, diabetes, thyroid, vitamins, cardiac, senior, women\u2019s or men\u2019s health.',
+    te:'మీ లక్ష్యాన్ని బట్టి: సాధారణ ఆరోగ్యం → **Full Body Checkup** (₹4,999); షుగర్ → **HbA1c** / **Diabetes Package** (₹1,399); థైరాయిడ్ → **Thyroid Complete** (₹749).',
+    hi:'आपके उद्देश्य पर निर्भर: सामान्य स्वास्थ्य → **फुल बॉडी चेकअप** (₹4,999); शुगर → **HbA1c** / **डायबिटीज़ पैकेज** (₹1,399); थायरॉइड → **थायरॉइड कंप्लीट** (₹749).' },
+  { k:/sugar|diabet|షుగర్|मधुमेह/i,
+    en:'For sugar monitoring, Vanaja offers **HbA1c** (₹600, no fasting), **FBS/PPBS**, or the **Diabetes Care Package** at ₹1,399 (save 20%) bundling all three plus kidney screening.',
+    te:'షుగర్ కోసం **HbA1c** (₹600), **FBS/PPBS**, లేదా ₹1,399 (**20% ఆదా**) **Diabetes Care Package** అందుబాటులో ఉన్నాయి.',
+    hi:'शुगर के लिए **HbA1c** (₹600), **FBS/PPBS**, या ₹1,399 (**20% बचत**) **डायबिटीज़ केयर पैकेज** उपलब्ध हैं.' },
+  { k:/general|full ?body|checkup|available/i,
+    en:'For a general health checkup I recommend the **Full Body Checkup — 25+ tests for ₹4,999** (save 25%): blood counts, thyroid, vitamins B12 & D, lipids, liver, kidney and electrolytes — with free home collection.',
+    te:'సాధారణ ఆరోగ్య తనిఖీ కోసం **Full Body Checkup — 25+ పరీక్షలు ₹4,999** (**25% ఆదా**) సిఫార్సు చేస్తాను. ఉచిత హోమ్ కలెక్షన్ కూడా.',
+    hi:'सामान्य जांच के लिए **फुल बॉडी चेकअप — 25+ टेस्ट ₹4,999** (**25% बचत**) सुझाता हूँ — फ्री होम कलेक्शन सहित।' },
+  { k:/report|result|mean/i,
+    en:'Your latest report shows mostly healthy values — Haemoglobin and Platelets normal; WBC slightly high and Vitamin D low. These are patterns doctors commonly re-check — they are **not a diagnosis**. Open **Report Insights** for values, trends and a secure doctor-share link.',
+    te:'మీ తాజా నివేదికలో ఎక్కువ విలువలు సాధారణం; WBC కొంచెం ఎక్కువ, విటమిన్ D తక్కువ. ఇవి **నిర్ధారణ కాదు** — **Report Insights** చూడండి.',
+    hi:'आपकी नवीनतम रिपोर्ट में ज़्यादातर मान सामान्य हैं; WBC हल्का ऊँचा और विटामिन D कम है। ये **निदान नहीं हैं** — **Report Insights** देखें।' },
+  { k:/prep|preparation|before/i,
+    en:'Preparation basics: Lipid Profile & Fasting Sugar need a **12-hour fast**; PPBS samples exactly 2 hours after a meal; thyroid prefers morning samples; CBC, HbA1c and Vitamin tests need no special prep.',
+    te:'సిద్ధత: లిపిడ్ & ఫాస్టింగ్ షుగర్ — **12 గం. ఉపవాసం**; PPBS — భోజనం తర్వాత ఖచ్చితంగా 2 గం.; థైరాయిడ్ — ఉదయం; CBC/HbA1c — ప్రత్యేక సిద్ధత లేదు.',
+    hi:'तैयारी: लिपिड और फास्टिंग शुगर — **12 घंटे उपवास**; PPBS — भोजन के ठीक 2 घंटे बाद; थायरॉइड — सुबह बेहतर; CBC/HbA1c — कोई तैयारी नहीं।' },
+];
+const FALLBACK = {
+  en:'I can help you choose tests, explain preparation, or walk through report values in simple words — but I don\u2019t diagnose or replace your doctor. What would you like to explore?',
+  te:'నేను పరీక్షల ఎంపిక, సిద్ధత, నివేదిక వివరణలో సహాయపడతాను — కానీ నిర్ధారణ చేయను. మీ వైద్యుడిని సంప్రదించండి.',
+  hi:'मैं टेस्ट चुनने, तैयारी और रिपोर्ट समझाने में मदद कर सकता हूँ — पर निदान नहीं करता। कृपया अपने डॉक्टर से मिलें।'
+};
+
+const scroll = document.getElementById('chatScroll');
+function bubble(cls, html){
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + cls;
+  div.innerHTML = html;
+  scroll.appendChild(div); scroll.scrollTop = scroll.scrollHeight;
+  return div;
+}
+function reply(q){
+  /* 1) Safety first — escalation overrides everything */
+  const esc = checkEscalation(q);
+  if (esc) return esc;
+  /* 2) In-chat language switch requests */
+  if (/telugu|తెలుగు/i.test(q)) return KB.length ? (KB.find(e=>e.k.test('తెలుగు')) ? 'తప్పకుండా! నేను తెలుగులో మాట్లాడతాను. మీ ప్రశ్న ఏమిటి?' : '') : '';
+  if (/hindi|हिंदी/i.test(q)) return 'बिल्कुल! मैं हिंदी में बात कर सकता हूँ। आपका सवाल क्या है?';
+  /* 3) Knowledge base in current language */
+  const hit = KB.find(e=>e.k.test(q));
+  return hit ? hit[LANG] || hit.en : FALLBACK[LANG] || FALLBACK.en;
+}
+function ask(q){ document.getElementById('chatInput').value = q; submitQ(new Event('x')); }
+async function submitQ(e){
+  e?.preventDefault?.();
+  const inp = document.getElementById('chatInput');
+  const q = inp.value.trim(); if (!q) return false;
+  inp.value='';
+  bubble('chat-user', escapeHtml(q));
+  const t = bubble('chat-ai typing','<i></i><i></i><i></i>');
+
+  /* ---- LIVE LLM PATH (OpenRouter) ---- */
+  if (VanajaAI.hasKey()){
+    try{
+      const history=[...scroll.querySelectorAll('.chat-msg')].slice(-6)
+        .map(el=>({role:el.classList.contains('chat-user')?'user':'assistant', content:el.textContent.slice(0,400)}));
+      const out=await VanajaAI.chat([...history,{role:'user',content:REPORT_CTX?q+'\n\n(My latest report: '+REPORT_CTX+')':q}],{lang:LANG});
+      t.className='chat-ai chat-msg'; t.classList.remove('typing');
+      t.innerHTML = mdLite(out) + `<div style="margin-top:.6rem;display:flex;gap:.5rem;flex-wrap:wrap">
+        <a class="btn btn-primary btn-sm" href="packages.html">${LANG==='te'?'ప్యాకేజీలు':LANG==='hi'?'पैकेज':'Explore packages'}</a>
+        <a class="btn btn-ghost btn-sm" href="recommender.html">🎯 Find my test</a>
+        <a class="btn btn-ghost btn-sm" href="voice.html">🎙️ మాట్లాడండి (Voice)</a></div>`;
+      scroll.scrollTop = scroll.scrollHeight; return false;
+    }catch(err){
+      console.warn('[VanajaAI] live call failed, using offline KB:',err.message);
+      bubble('chat-ai','<small style="color:#B36A00">⚠ Live AI unreachable — answered from offline knowledge.</small>');
+    }
+  }
+  /* ---- OFFLINE DEMO PATH ---- */
+  setTimeout(()=>{
+    t.className='chat-ai chat-msg'; t.classList.remove('typing');
+    t.innerHTML = mdLite(reply(q)) + `<div style="margin-top:.6rem;display:flex;gap:.5rem;flex-wrap:wrap">
+      <a class="btn btn-primary btn-sm" href="packages.html">${LANG==='te'?'ప్యాకేజీలు':LANG==='hi'?'पैकेज':'Explore packages'}</a>
+      <a class="btn btn-ghost btn-sm" href="recommender.html">🎯 Find my test</a>
+      <a class="btn btn-ghost btn-sm" href="voice.html">🎙️ మాట్లాడండి (Voice)</a>
+      ${LANG!=='te'?`<button class="btn btn-ghost btn-sm" onclick="setLang('te')">తెలుగు లో</button>`:''}
+      ${LANG!=='hi'?`<button class="btn btn-ghost btn-sm" onclick="setLang('hi')">हिंदी में</button>`:''}
+      </div>`;
+    scroll.scrollTop = scroll.scrollHeight;
+  }, 900);
+  return false;
+}
+function escapeHtml(s){ const d=document.createElement('i'); d.textContent=s; return d.innerHTML; }
+function mdLite(s){ return escapeHtml(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>'); }
+
+bubble('chat-ai', 'Namaste! 🙏 I\'m the Vanaja AI assistant. Ask me about tests, preparation (like fasting), health packages, or what your report means — in English or Telugu.');
+if (new URLSearchParams(location.search).get('about') === 'report') ask('What does my report mean?');
+</script>
+</body>
+</html>
